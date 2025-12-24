@@ -1,0 +1,12 @@
+{
+  "name": "my-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "pnpm -r --filter ./packages/* build && pnpm -r --filter ./apps/* build",
+    "dev": "pnpm -r --parallel dev",
+    "seed": "pnpm --filter @ruoyi/api seed",
+    "lint": "pnpm -r --filter ./apps/* lint",
+    "format": "pnpm -r --filter ./apps/* format"
+  }
+}
