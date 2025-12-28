@@ -48,9 +48,9 @@ export class AuthService {
           : [],
       ),
     );
-    const payload = { userAccount: user.account, sub: user.publicId, roleKeys };
-    // 更新异步上下文，将用户publicId放入
-    this.alsService.updateContext({ userPublicId: user.publicId });
+    const payload = { userAccount: user.account, sub: user.id, roleKeys };
+    // 更新异步上下文，将用户id放入
+    this.alsService.updateContext({ userId: user.id });
 
     return {
       accessToken: await this.accessJwtService.signAsync(payload),
@@ -62,7 +62,7 @@ export class AuthService {
     try {
       const payload = await this.refreshJwtService.verifyAsync(refreshToken);
       if (payload.sub) {
-        this.alsService.updateContext({ userPublicId: payload.sub });
+        this.alsService.updateContext({ userId: payload.sub });
       }
       const roleKeys =
         Array.isArray((payload as any).roleKeys) &&

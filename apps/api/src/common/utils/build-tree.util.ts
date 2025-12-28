@@ -2,8 +2,8 @@
  * 基础扁平节点接口
  */
 interface BaseFlatItem {
-  id: number;
-  parentId: number;
+  id?: string | number;
+  parentId?: string | number;
   [key: string]: any;
 }
 
@@ -60,26 +60,43 @@ export function buildTree<T extends BaseFlatItem, R>(
   flatData: T[],
   mapper: (item: T) => R,
 ): Tree<R>[] {
+  const getId = (item: T) => item.id;
+  const getParentId = (item: T) => item.parentId;
+
   // 创建 id 到节点的映射
-  const nodeMap = new Map<number, Tree<R>>();
+  const nodeMap = new Map<string | number, Tree<R>>();
 
   // 初始化所有节点并添加到映射中
   flatData.forEach((item) => {
-    nodeMap.set(item.id, { ...mapper(item), children: [] });
+    const id = getId(item);
+    if (id === undefined) {
+      return;
+    }
+    nodeMap.set(id, { ...mapper(item), children: [] });
   });
 
   // 构建树形结构
   const rootNodes: Tree<R>[] = [];
 
   flatData.forEach((item) => {
-    const node = nodeMap.get(item.id)!;
+    const id = getId(item);
+    if (id === undefined) {
+      return;
+    }
+    const node = nodeMap.get(id)!;
+    const parentId = getParentId(item);
 
-    if (item.parentId === 0 || !nodeMap.has(item.parentId)) {
+    if (
+      parentId === 0 ||
+      parentId === '0' ||
+      parentId === undefined ||
+      !nodeMap.has(parentId)
+    ) {
       // 根节点或父节点不存在，添加到根节点数组
       rootNodes.push(node);
     } else {
       // 找到父节点，将当前节点添加到父节点的 children 中
-      const parent = nodeMap.get(item.parentId);
+      const parent = nodeMap.get(parentId);
       if (parent) {
         parent.children.push(node);
       }

@@ -6,23 +6,18 @@
   DialogHeader,
   DialogTitle,
 } from "@ruoyi/ui";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@ruoyi/ui";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@ruoyi/ui";
 import { Input } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
 import { RadioGroup, RadioGroupItem } from "@ruoyi/ui";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { dictDataCreateSchema } from "@ruoyi/contracts";
+import { dictDataCreateSchema, type FrontendDictData } from "@ruoyi/contracts";
 import { axiosClient } from "@/lib/apiClient";
 import { toast } from "sonner";
 import DialogLoading from "@/components/Dialog/loading";
-import type { DictData } from "@/lib/dictQueries";
+// import type { DictData } from "@/lib/dictQueries";
 
 const schema = dictDataCreateSchema;
 
@@ -39,7 +34,7 @@ export default function DictDataDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  activeData?: DictData | null;
+  activeData?: FrontendDictData | null;
   isCreate?: boolean;
   dictType: string;
 }) {
@@ -63,7 +58,7 @@ export default function DictDataDialog({
     const payload = {
       ...data,
       type: dictType,
-      publicId: isCreate ? undefined : activeData?.publicId,
+      id: isCreate ? undefined : activeData?.id,
     };
     try {
       const res = await axiosClient.post(
@@ -91,7 +86,7 @@ export default function DictDataDialog({
           </DialogTitle>
         </DialogHeader>
         <form className="max-h-[50vh overflow-y-auto py-2 pr-2 sm:max-h-[65vh]">
-          <FieldGroup className="!gap-4">
+          <FieldGroup className="gap-4!">
             <Field orientation="grid">
               <FieldLabel htmlFor="dictType">字典类型</FieldLabel>
               <Input

@@ -39,7 +39,7 @@ export function DialogFormChangePassword({
   open: boolean;
   onOpenChange?: (open: boolean) => void;
   onSuccess?: () => void;
-  rowData: { publicId: string; account: string };
+  rowData: { id: string; account: string };
 }) {
   // const [formState, setFormState] = useState<TChangePasswordSchema>({
   //   password: "",
@@ -64,7 +64,7 @@ export function DialogFormChangePassword({
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
       const res = await axiosClient.post("/system/user/reset-password", {
-        publicId: rowData.publicId,
+        id: rowData.id,
         password: data.password,
       });
       if (res.status === 201) {
@@ -89,7 +89,7 @@ export function DialogFormChangePassword({
           </DialogDescription>
         </DialogHeader>
         <form className="max-h-[50vh] overflow-y-auto py-2 pr-2 sm:max-h-[65vh]">
-          <FieldGroup className="!gap-4">
+          <FieldGroup className="gap-4!">
             <Field orientation="grid">
               <FieldLabel htmlFor="password">新密码</FieldLabel>
               <Input

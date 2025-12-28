@@ -87,13 +87,13 @@ export default function Profile() {
   // }, [user?.status]);
 
   const onSubmit = async (values: ProfileFormValues) => {
-    if (!user?.publicId) {
+    if (!user?.id) {
       toast.error("Missing user id, please re-login and try again.");
       return;
     }
     try {
       const res = await axiosClient.post("/system/user/update", {
-        publicId: user.publicId,
+        id: user.id,
         name: values.name,
         email: values.email,
         sex: values.sex,
@@ -176,7 +176,7 @@ export default function Profile() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-              <FieldGroup className="!gap-4">
+              <FieldGroup className="gap-4!">
                 <Field orientation="grid">
                   <FieldLabel htmlFor="account">账号</FieldLabel>
                   <Input

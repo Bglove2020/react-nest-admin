@@ -59,10 +59,10 @@ export default function DictDataPage() {
       });
   }, [dictType]);
 
-  const updateDataStatus = (publicId: string, status: boolean) => {
+  const updateDataStatus = (id: string, status: boolean) => {
     axiosClient
       .post("/system/dict/data/update", {
-        publicId,
+        id,
         status: status ? "1" : "0",
       })
       .then((res) => {
@@ -78,7 +78,7 @@ export default function DictDataPage() {
 
   const deleteDictData = useCallback(async () => {
     return axiosClient.delete(
-      `/system/dict/data/delete/${activeData!.publicId}`,
+      `/system/dict/data/delete/${activeData!.id}`,
     );
   }, [activeData]);
 
@@ -135,7 +135,7 @@ export default function DictDataPage() {
         <Switch
           checked={row.getValue("status") === "1"}
           onCheckedChange={(checked) =>
-            updateDataStatus(row.original.publicId, checked)
+            updateDataStatus(row.original.id, checked)
           }
         />
       ),

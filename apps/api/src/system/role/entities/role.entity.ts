@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToMany,
   CreateDateColumn,
@@ -9,8 +9,9 @@ import {
   BeforeInsert,
   DeleteDateColumn,
   Index,
+  VersionColumn,
 } from 'typeorm';
-import { randomUUID } from 'crypto';
+import { v7 as uuidv7 } from 'uuid';
 import { SysUser } from '@/system/user/entities/user.entity';
 import { SysMenu } from '@/system/menu/entities/menu.entity';
 
@@ -18,17 +19,13 @@ import { SysMenu } from '@/system/menu/entities/menu.entity';
 @Index('uniq_sys_role_name_active', ['activeName'], { unique: true })
 @Index('uniq_sys_role_key_active', ['activeRoleKey'], { unique: true })
 export class SysRole {
-  @PrimaryGeneratedColumn({
-    comment: '角色id，有序，自增，非uuid',
-  })
-  id: number;
+  @PrimaryColumn('char', {
+    name: 'id',
 
-  @Column({
-    name: 'public_id',
-    unique: true,
+    length: 36,
     comment: '角色公开id，唯一且与id一一对应，用于对外暴露',
   })
-  publicId: string;
+  id: string;
 
   @Column({ length: 30, comment: '角色名称' })
   name: string;
@@ -38,7 +35,7 @@ export class SysRole {
     type: 'varchar',
     length: 80,
     asExpression:
-      "case when deleted_at is null then name else concat(name, '#', public_id) end",
+      "case when deleted_at is null then name else concat(name, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
     insert: false,
@@ -54,7 +51,7 @@ export class SysRole {
     type: 'varchar',
     length: 160,
     asExpression:
-      "case when deleted_at is null then role_key else concat(role_key, '#', public_id) end",
+      "case when deleted_at is null then role_key else concat(role_key, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
     insert: false,
@@ -100,6 +97,9 @@ export class SysRole {
   })
   updateTime: Date;
 
+  @VersionColumn({ name: 'version', default: 0, comment: '版本号' })
+  version: number;
+
   @Column({ name: 'remark', length: 500, default: '', comment: '备注' })
   remark: string;
 
@@ -117,9 +117,9 @@ export class SysRole {
   menus: SysMenu[];
 
   @BeforeInsert()
-  setPublicId() {
-    if (!this.publicId) {
-      this.publicId = randomUUID();
+  setId() {
+    if (!this.id) {
+      this.id = uuidv7();
     }
   }
 }

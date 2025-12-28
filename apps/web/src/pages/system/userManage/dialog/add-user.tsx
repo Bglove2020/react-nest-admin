@@ -102,21 +102,21 @@ export function UserDialog({
     ? {
         name: "",
         account: "",
-        deptPublicId: "",
+        deptId: "",
         email: "",
         password: "",
         confirmPassword: "",
         sex: "1" as const,
         status: "1" as const,
-        rolePublicIds: [] as string[],
+        roleIds: [] as string[],
       }
     : {
-        publicId: activeUser.publicId,
+        id: activeUser.id,
         name: activeUser?.name || "",
         sex: (activeUser?.sex || "1") as "0" | "1" | "2",
         status: (activeUser?.status || "1") as "0" | "1",
-        deptPublicId: activeUser?.deptPublicId || "",
-        rolePublicIds: (activeUser?.rolePublicIds || []) as string[],
+        deptId: activeUser?.deptId || "",
+        roleIds: (activeUser?.roleIds || []) as string[],
       };
 
   const {
@@ -135,7 +135,7 @@ export function UserDialog({
       setRoleList(
         res.data.data.map((role: any) => ({
           label: role.name,
-          value: role.publicId,
+          value: role.id,
         })),
       );
     });
@@ -182,7 +182,7 @@ export function UserDialog({
           </DialogDescription>
         </DialogHeader>
         <form className="max-h-[50vh] overflow-y-auto py-2 pr-2 sm:max-h-[65vh]">
-          <FieldGroup className="!gap-4">
+          <FieldGroup className="gap-4!">
             <Field orientation="grid">
               <FieldLabel htmlFor="name">用户名</FieldLabel>
               <Input
@@ -217,7 +217,7 @@ export function UserDialog({
             <Field orientation="grid">
               <FieldLabel htmlFor="deptId">部门</FieldLabel>
               <Controller
-                name="deptPublicId"
+                name="deptId"
                 control={control}
                 render={({ field }) => (
                   <TreeSelect
@@ -228,11 +228,8 @@ export function UserDialog({
                   />
                 )}
               />
-              {errors.deptPublicId && (
-                <FieldError
-                  errors={[errors.deptPublicId]}
-                  className="col-start-2"
-                />
+              {errors.deptId && (
+                <FieldError errors={[errors.deptId]} className="col-start-2" />
               )}
             </Field>
 
@@ -257,7 +254,7 @@ export function UserDialog({
             <Field orientation="grid">
               <FieldLabel htmlFor="roles">角色</FieldLabel>
               <Controller
-                name="rolePublicIds"
+                name="roleIds"
                 control={control}
                 render={({ field }) => (
                   <MultiSelectDropdown
@@ -267,11 +264,8 @@ export function UserDialog({
                   />
                 )}
               />
-              {errors.rolePublicIds && (
-                <FieldError
-                  errors={[errors.rolePublicIds]}
-                  className="col-start-2"
-                />
+              {errors.roleIds && (
+                <FieldError errors={[errors.roleIds]} className="col-start-2" />
               )}
             </Field>
 

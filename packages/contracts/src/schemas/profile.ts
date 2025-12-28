@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const userInfoSchema = z.object({
   user: z.object({
-    publicId: z.string(),
+    id: z.string(),
     name: z.string(),
     account: z.string(),
     email: z.string(),

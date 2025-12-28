@@ -21,7 +21,7 @@
 ## 认证模块 /auth（Public）
 ### POST /auth/register
 - 说明：注册新用户。
-- 请求体：`account`(>=6)、`name`、`email`(邮箱格式)、`sex`('0'|'1'|'2')、`password`(>=8，需含字母/数字/特殊字符)、`deptPublicId`(UUID)、`avatar`、`rolePublicIds`(string[])。
+- 请求体：`account`(>=6)、`name`、`email`(邮箱格式)、`sex`('0'|'1'|'2')、`password`(>=8，需含字母/数字/特殊字符)、`deptId`(UUID)、`avatar`、`roleIds`(string[])。
 - 成功：`{ code:200, msg:"注册成功", data:null }`。
 - 异常：校验失败或数据库错误按通用异常格式返回。
 
@@ -41,16 +41,16 @@
 ### GET /system/user/list
 - 说明：获取用户列表。
 - 参数：无。
-- 成功：`data` 为数组，元素字段 `publicId, account, name, email, sex, avatar, status, deptPublicId, deptName, rolePublicIds`。
+- 成功：`data` 为数组，元素字段 `id, account, name, email, sex, avatar, status, deptId, deptName, roleIds`。
 
 ### POST /system/user/create
 - 说明：创建用户。
-- 请求体：同注册接口（`account`、`name`、`email`、`sex`、`password`、`deptPublicId`、`avatar`、`rolePublicIds`）。
+- 请求体：同注册接口（`account`、`name`、`email`、`sex`、`password`、`deptId`、`avatar`、`roleIds`）。
 - 成功：`{ code:200, msg:"用户创建成功", data:null }`。
 
-### GET /system/user/get/:publicId
-- 说明：按公开ID获取用户。
-- 路径参数：`publicId`。
+### GET /system/user/get/:id
+- 说明：按ID获取用户。
+- 路径参数：`id`。
 - 成功：`data` 为单个用户（字段同列表）。用户不存在时 HTTP 200 但返回 `{ code:404, msg:"用户不存在", data:null }`。
 
 ### GET /system/user/checkUserAccount（Public）
@@ -60,17 +60,17 @@
 
 ### POST /system/user/reset-password
 - 说明：重置用户密码。
-- 请求体：`publicId`、`password`（同注册密码规则）。
+- 请求体：`id`、`password`（同注册密码规则）。
 - 成功：`{ code:200, msg:"密码重置成功", data:null }`。
 
 ### POST /system/user/update
 - 说明：更新用户信息。
-- 请求体：`publicId` 必填，其余字段同创建为可选；提供 `deptPublicId` 或 `rolePublicIds` 时将同步更新部门/角色。
+- 请求体：`id` 必填，其余字段同创建为可选；提供 `deptId` 或 `roleIds` 时将同步更新部门/角色。
 - 成功：`{ code:200, msg:"用户更新成功", data:null }`。
 
-### DELETE /system/user/delete/:publicId
-- 说明：按公开ID删除用户。
-- 路径参数：`publicId`。
+### DELETE /system/user/delete/:id
+- 说明：按ID删除用户。
+- 路径参数：`id`。
 - 成功：`{ code:200, msg:"用户删除成功", data:null }`。
 
 ## 角色模块 /system/role（需鉴权）
@@ -82,62 +82,62 @@
 ### GET /system/role/list
 - 说明：获取角色列表。
 - 参数：无。
-- 成功：`data` 为角色数组，字段 `publicId, name, roleKey, sortOrder, status, menuIds`。
+- 成功：`data` 为角色数组，字段 `id, name, roleKey, sortOrder, status, menuIds`。
 
 ### POST /system/role/update
 - 说明：更新角色。
-- 请求体：`publicId` 必填，其余字段同创建为可选；若传 `menuIds` 会整体覆盖绑定。
+- 请求体：`id` 必填，其余字段同创建为可选；若传 `menuIds` 会整体覆盖绑定。
 - 成功：`{ code:200, msg:"角色更新成功", data:null }`。
 
-### DELETE /system/role/delete/:publicId
+### DELETE /system/role/delete/:id
 - 说明：删除角色（若仍关联用户会抛错）。
-- 路径参数：`publicId`。
+- 路径参数：`id`。
 - 成功：`{ code:200, msg:"角色删除成功", data:null }`。
 
 ## 部门模块 /system/dept（需鉴权）
 ### POST /system/dept/create
 - 说明：创建部门。
-- 请求体：`name`、`parentPublicId`(UUID)、`sortOrder`(number)、`leaderPublicId`(UUID)、`status`('0'|'1')。
+- 请求体：`name`、`parentId`(UUID)、`sortOrder`(number)、`leaderId`(UUID)、`status`('0'|'1')。
 - 成功：`{ code:200, msg:"创建成功", data:null }`。
 
 ### GET /system/dept/list
 - 说明：获取部门树。
 - 参数：无。
-- 成功：`data` 为树形数组，节点字段 `publicId, name, sortOrder, leaderPublicId, leaderName, leaderEmail, status, children`。
+- 成功：`data` 为树形数组，节点字段 `id, name, sortOrder, leaderId, leaderName, leaderEmail, status, children`。
 
 ### POST /system/dept/update
 - 说明：更新部门。
-- 请求体：`publicId` 必填，其余字段同创建为可选；若传 `parentPublicId` 会被拒绝（不支持更换父级）。
+- 请求体：`id` 必填，其余字段同创建为可选；若传 `parentId` 会被拒绝（不支持更换父级）。
 - 成功：`{ code:200, msg:"更新成功", data:null }`。
 
-### DELETE /system/dept/delete?publicId=...
+### DELETE /system/dept/delete?id=...
 - 说明：删除部门及子部门，并软删关联用户。
-- Query：`publicId`。
+- Query：`id`。
 - 成功：`code:200`，`msg` 会提示删除的子部门/用户数量，`data:null`。
 
 ## 菜单模块 /system/menu（需鉴权）
 ### POST /system/menu/create
 - 说明：创建菜单。
-- 请求体：`name`、`parentPublicId`(UUID)、`sortOrder`(number)、`status`('0'|'1')。
+- 请求体：`name`、`parentId`(UUID)、`sortOrder`(number)、`status`('0'|'1')。
 - 成功：`{ code:200, msg:"菜单创建成功", data:null }`。
 
 ### GET /system/menu/list
 - 说明：获取菜单树。
 - 参数：无。
-- 成功：`data` 为树形数组，节点字段 `publicId, name, sortOrder, path, isFrame, menuType, visible, status, perms, createBy, createTime, updateBy, updateTime, remark, children`。
+- 成功：`data` 为树形数组，节点字段 `id, name, sortOrder, path, isFrame, menuType, visible, status, perms, createBy, createTime, updateBy, updateTime, remark, children`。
 
 ### GET /system/menu/:id
-- 说明：按公开ID获取菜单。
-- 路径参数：`id`（菜单 publicId）。
+- 说明：按ID获取菜单。
+- 路径参数：`id`。
 - 成功：`{ code:200, msg:"菜单获取成功", data:菜单对象 }`。
 
 ### POST /system/menu/update
 - 说明：更新菜单。
-- 请求体：`publicId` 必填，其余字段同创建为可选；若传 `parentPublicId` 将重新计算层级。
+- 请求体：`id` 必填，其余字段同创建为可选；若传 `parentId` 将重新计算层级。
 - 成功：`{ code:200, msg:"菜单更新成功", data:null }`。
 
-### DELETE /system/menu/delete?publicId=...
+### DELETE /system/menu/delete?id=...
 - 说明：删除菜单并软删所有子菜单。
-- Query：`publicId`。
+- Query：`id`。
 - 成功：`{ code:200, msg:"菜单删除成功", data:null }`。
 

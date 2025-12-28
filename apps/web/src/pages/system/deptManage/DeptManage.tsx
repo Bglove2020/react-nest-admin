@@ -62,7 +62,7 @@ export default function DeptManage() {
 
   const deleteDept = useCallback(async () => {
     return await axiosClient.delete(
-      `/system/dept/delete?publicId=${activeDept?.publicId}`,
+      `/system/dept/delete?id=${activeDept?.id}`,
     );
   }, [activeDept]);
 
@@ -93,7 +93,7 @@ export default function DeptManage() {
           onCheckedChange={(checked) => {
             axiosClient
               .post("/system/dept/update", {
-                publicId: row.original.publicId,
+                id: row.original.id,
                 status: checked ? "1" : "0",
               })
               .then((res) => {
@@ -218,7 +218,7 @@ export default function DeptManage() {
           data={data}
           columns={columns}
           filterEntries={extractFilterEntries(filters)}
-          getRowId={(r) => r.publicId}
+          getRowId={(r) => r.id}
           getSubRows={(r) => {
             const deptNode = r as DeptNode;
             return (deptNode.children as DeptNode[])?.sort(

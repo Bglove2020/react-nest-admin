@@ -83,7 +83,7 @@ export default function AddRoleDialog({
         sortOrder: data.sortOrder,
         status: data.status,
         menuIds: data.menuIds,
-        publicId: isCreate ? undefined : activeRole?.publicId,
+        id: isCreate ? undefined : activeRole?.id,
       };
       const res = await axiosClient.post(
         isCreate ? "/system/role/create" : "/system/role/update",
@@ -109,7 +109,7 @@ export default function AddRoleDialog({
           <DialogTitle>{isCreate ? "新增角色" : "编辑角色"}</DialogTitle>
         </DialogHeader>
         <form className="flex-1 overflow-y-auto py-2 pr-2">
-          <FieldGroup className="!gap-4">
+          <FieldGroup className="gap-4!">
             <Field orientation="grid">
               <FieldLabel htmlFor="name">角色名称</FieldLabel>
               <Input

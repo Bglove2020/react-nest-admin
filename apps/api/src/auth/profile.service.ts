@@ -22,26 +22,22 @@ export class ProfileService {
   ) {}
 
   async getInfo(): Promise<UserInfo> {
-    const userPublicId = this.als.getUserPublicId()!;
+    const userId = this.als.getUserId()!;
 
     let user: SysUser | null = null;
     try {
       user = await this.userRepository.findOne({
-        where: { publicId: userPublicId },
+        where: { id: userId },
         relations: { roles: true },
         select: {
           id: true,
-          publicId: true,
           name: true,
           account: true,
           email: true,
           avatar: true,
           sex: true,
           status: true,
-          roles: {
-            id: true,
-            roleKey: true,
-          },
+          roles: { id: true, roleKey: true },
         },
       });
     } catch (e: any) {
@@ -86,7 +82,7 @@ export class ProfileService {
 
     return {
       user: {
-        publicId: user.publicId,
+        id: user.id,
         name: user.name,
         account: user.account,
         email: user.email,
@@ -100,16 +96,15 @@ export class ProfileService {
   }
 
   async getRouters(): Promise<UserRouterItem[]> {
-    const userPublicId = this.als.getUserPublicId()!;
+    const userId = this.als.getUserId()!;
 
     let user: SysUser | null = null;
     try {
       user = await this.userRepository.findOne({
-        where: { publicId: userPublicId },
+        where: { id: userId },
         relations: { roles: true },
         select: {
           id: true,
-          publicId: true,
           roles: { id: true, roleKey: true },
         },
       });
@@ -152,12 +147,12 @@ export class ProfileService {
   }
 
   async getSideBarMenus(): Promise<SideBarItem[]> {
-    const userPublicId = this.als.getUserPublicId()!;
+    const userId = this.als.getUserId()!;
 
     let user: SysUser | null = null;
     try {
       user = await this.userRepository.findOne({
-        where: { publicId: userPublicId },
+        where: { id: userId },
         relations: { roles: true },
       });
     } catch (e: any) {
@@ -198,7 +193,7 @@ export class ProfileService {
 
   // 根据对象某个字段进行去重，需要使用map。set无法对对象进行去重
   private dedupMenus(menus: SysMenu[]): SysMenu[] {
-    const deduped = new Map<number, SysMenu>();
+    const deduped = new Map<string, SysMenu>();
     menus.forEach((menu) => deduped.set(menu.id, menu));
     return Array.from(deduped.values());
   }

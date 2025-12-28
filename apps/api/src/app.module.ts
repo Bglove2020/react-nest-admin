@@ -5,9 +5,14 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RbacGuard } from './auth/guards/rbac.guard';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DataSource } from 'typeorm';
+import { addTransactionalDataSource } from 'typeorm-transactional';
 import databaseConfig from './config/database.config';
 import loggingConfig from './config/logging.config';
+import redisConfig from './config/redis.config';
 import { AuthModule } from '@/auth/auth.module';
+import { RedisModule } from '@nestjs-modules/ioredis';
+import { CommonRedisModule } from './common/redis/redis.module';
 import { AlsModule } from './common/als/als.module';
 import { LoggingModule } from './common/logging/logging.module';
 import { LoggingService } from './common/logging/logging.service';
@@ -32,8 +37,22 @@ import { SysDictData } from './system/dict/entities/dict-data.entity';
     ConfigModule.forRoot({
       // 这里根据 NODE_ENV 加载不同的环境变量文件，再默认加载 .env。如果不同文件中有同名变量，会保留优先加载的文件中的值，不会被后面的文件覆盖。
       envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
-      load: [databaseConfig, loggingConfig],
+      load: [databaseConfig, loggingConfig, redisConfig],
       isGlobal: true,
+    }),
+    RedisModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        type: 'single',
+        options: {
+          host: configService.get<string>('redis.host', 'localhost'),
+          port: configService.get<number>('redis.port', 6379),
+          password: configService.get<string>('redis.password'),
+          db: configService.get<number>('redis.db', 0),
+          keyPrefix: configService.get<string>('redis.keyPrefix', ''),
+        },
+      }),
+      inject: [ConfigService],
     }),
     TypeOrmModule.forRootAsync({
       // 关键：注入 ConfigService 和 LoggingService 供 useFactory 使用
@@ -77,6 +96,13 @@ import { SysDictData } from './system/dict/entities/dict-data.entity';
           // dropSchema: true, // 建议仅在开发环境开启
         };
       },
+      // 添加 dataSourceFactory 以支持事务装饰器
+      async dataSourceFactory(options) {
+        if (!options) {
+          throw new Error('Invalid options passed');
+        }
+        return addTransactionalDataSource(new DataSource(options));
+      },
       // 注入 ConfigService 和 LoggingService 才能在 useFactory 中使用
       inject: [ConfigService, LoggingService],
     }),
@@ -90,6 +116,7 @@ import { SysDictData } from './system/dict/entities/dict-data.entity';
       SysDictData,
     ]),
     AuthModule,
+    CommonRedisModule,
     AlsModule,
     LoggingModule,
     DeptModule,

@@ -98,7 +98,7 @@ import { DictSelect } from "@/components/dict-select";
 - `useDictOptions(dictType, enabled, filterStatus)` - 获取选项数组（最推荐）
 - `useDictDataByTypeQuery(dictType, enabled)` - 获取原始字典数据
 - `useDictTypesQuery(enabled)` - 获取所有字典类型
-- `useDictDataQuery(params, enabled)` - 通过 publicId 和 type 获取数据
+- `useDictDataQuery(params, enabled)` - 通过 id 和 type 获取数据
 
 ### 工具函数
 

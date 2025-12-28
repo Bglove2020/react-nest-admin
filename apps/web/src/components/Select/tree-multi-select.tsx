@@ -8,7 +8,7 @@ import type { TreeNode } from "@/types/tree";
 export type { TreeNode };
 
 type TreeMultiSelectProps = {
-  value?: string[]; // 选中的 publicId 数组
+  value?: string[]; // 选中的 id 数组
   onChange?: (value: string[]) => void; // 选择变化回调
   data: TreeNode[]; // 树形数据
   className?: string; // 自定义样式
@@ -22,7 +22,7 @@ type NodeState = "checked" | "indeterminate" | "unchecked";
 
 // 获取节点的所有后代节点 ID（包括自身）
 function getAllDescendantIds(node: TreeNode): string[] {
-  const ids: string[] = [node.publicId];
+  const ids: string[] = [node.id];
   if (node.children && node.children.length > 0) {
     node.children.forEach((child) => {
       ids.push(...getAllDescendantIds(child));
@@ -31,16 +31,16 @@ function getAllDescendantIds(node: TreeNode): string[] {
   return ids;
 }
 
-// 根据 publicId 从 data 中找到对应的节点
-function findNodeByPublicId(
+// 根据 id 从 data 中找到对应的节点
+function findNodeById(
   nodes: TreeNode[],
-  publicId: string,
+  id: string,
 ): TreeNode | null {
   for (const node of nodes) {
-    if (node.publicId === publicId) {
+    if (node.id === id) {
       return node;
     } else if (node.children) {
-      const found = findNodeByPublicId(node.children, publicId);
+      const found = findNodeById(node.children, id);
       if (found) return found;
     }
   }
@@ -52,7 +52,7 @@ function calculateNodeState(
   node: TreeNode,
   selectedIds: Set<string>,
 ): NodeState {
-  const isSelected = selectedIds.has(node.publicId);
+  const isSelected = selectedIds.has(node.id);
   const hasChildren = node.children && node.children.length > 0;
 
   if (!hasChildren) {
@@ -109,7 +109,7 @@ function TreeNodeItem({
   data: TreeNode[];
 }) {
   const hasChildren = node.children && node.children.length > 0;
-  const isExpanded = expandedIds.has(node.publicId);
+  const isExpanded = expandedIds.has(node.id);
   const nodeState = calculateNodeState(node, selectedIds);
   const isChecked = nodeState === "checked";
   const isIndeterminate = nodeState === "indeterminate";
@@ -122,20 +122,20 @@ function TreeNodeItem({
 
   const handleCheckboxChange = (checked: boolean) => {
     if (!canSelect) return;
-    onToggleSelect(node.publicId, checked);
+    onToggleSelect(node.id, checked);
   };
 
   const handleNodeNameClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (hasChildren) {
-      onToggleExpand(node.publicId);
+      onToggleExpand(node.id);
     }
   };
 
   const handleExpandIconClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (hasChildren) {
-      onToggleExpand(node.publicId);
+      onToggleExpand(node.id);
     }
   };
 
@@ -144,7 +144,7 @@ function TreeNodeItem({
       {hasChildren ? (
         <Collapsible
           open={isExpanded}
-          onOpenChange={() => onToggleExpand(node.publicId)}
+          onOpenChange={() => onToggleExpand(node.id)}
         >
           <div
             className={cn(
@@ -176,7 +176,7 @@ function TreeNodeItem({
             <div>
               {node.children!.map((child) => (
                 <TreeNodeItem
-                  key={child.publicId}
+                  key={child.id}
                   node={child}
                   level={level + 1}
                   selectedIds={selectedIds}
@@ -261,7 +261,7 @@ export function TreeMultiSelect({
   // 切换选择状态
   const handleToggleSelect = React.useCallback(
     (id: string, checked: boolean) => {
-      const node = findNodeByPublicId(data, id);
+      const node = findNodeById(data, id);
       if (!node) return;
 
       setSelectedIds((prev) => {
@@ -301,14 +301,14 @@ export function TreeMultiSelect({
 
               if (allChildrenSelected) {
                 // 所有子节点都被选中，选中父节点
-                newSelectedIds.add(n.publicId);
+                newSelectedIds.add(n.id);
               } else if (hasSelectedChildren) {
                 // 有子节点被选中，但不全选，父节点保持半选状态（不添加到 selectedIds）
-                newSelectedIds.add(n.publicId);
+                newSelectedIds.add(n.id);
                 // 半选状态通过 calculateNodeState 计算得出
               } else {
                 // 没有子节点被选中，取消选中父节点
-                newSelectedIds.delete(n.publicId);
+                newSelectedIds.delete(n.id);
               }
 
               // 递归处理子节点
@@ -342,7 +342,7 @@ export function TreeMultiSelect({
         <div className="p-0.5">
           {data.map((node) => (
             <TreeNodeItem
-              key={node.publicId}
+              key={node.id}
               node={node}
               selectedIds={selectedIds}
               expandedIds={expandedIds}

@@ -190,9 +190,9 @@ export function ParentSelectField({
 
   return (
     <Field orientation="grid">
-      <FieldLabel htmlFor="parentPublicId">父菜单</FieldLabel>
+      <FieldLabel htmlFor="parentId">父菜单</FieldLabel>
       <Controller
-        name="parentPublicId"
+        name="parentId"
         control={control}
         render={({ field }) => (
           <TreeSelect
@@ -205,8 +205,8 @@ export function ParentSelectField({
           />
         )}
       />
-      {errors.parentPublicId && (
-        <FieldError errors={[errors.parentPublicId]} className="col-start-2" />
+      {errors.parentId && (
+        <FieldError errors={[errors.parentId]} className="col-start-2" />
       )}
     </Field>
   );

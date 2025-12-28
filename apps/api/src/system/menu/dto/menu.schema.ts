@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import {
-  optionalPublicIdSchema,
-  publicIdSchema,
+  optionalIdSchema,
+  idSchema,
   sortOrderSchema,
   statusSchema,
 } from '@ruoyi/contracts';
@@ -14,7 +14,7 @@ const baseMenuSchema = z.object({
   name: z.string().min(1, '请输入菜单名称'),
   sortOrder: sortOrderSchema,
   status: statusSchema,
-  parentPublicId: optionalPublicIdSchema.optional(),
+  parentId: optionalIdSchema.optional(),
   perms: z.string().optional(),
   isFrame: isFrameSchema.optional(),
   visible: visibleSchema.optional(),
@@ -98,5 +98,5 @@ function refineMenuSchema(
 export const menuCreateDtoSchema = baseMenuSchema.superRefine(refineMenuSchema);
 
 export const menuUpdateDtoSchema = baseMenuSchema
-  .extend({ publicId: publicIdSchema })
+  .extend({ id: idSchema })
   .superRefine(refineMenuSchema);

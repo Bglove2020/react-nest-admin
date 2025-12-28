@@ -1,12 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { OptimisticLockVersionMismatchError, Repository } from 'typeorm';
 import { SysDict } from './entities/dict.entity';
 import { SysDictData } from './entities/dict-data.entity';
 import { CreateDictTypeDto } from './dto/create-dict-type.dto';
 import { UpdateDictTypeDto } from './dto/update-dict-type.dto';
 import { CreateDictDataDto } from './dto/create-dict-data.dto';
 import { UpdateDictDataDto } from './dto/update-dict-data.dto';
+import { RedisService } from '@/common/redis/redis.service';
+
+const DICT_DATA_CACHE_KEY_PREFIX = 'dict:data:';
 
 @Injectable()
 export class DictService {
@@ -15,6 +18,7 @@ export class DictService {
     private readonly dictRepository: Repository<SysDict>,
     @InjectRepository(SysDictData)
     private readonly dictDataRepository: Repository<SysDictData>,
+    private readonly redisService: RedisService,
   ) {}
 
   // 已更新
@@ -29,11 +33,16 @@ export class DictService {
   }
 
   // 已更新
-  async dataList(publicId: string, type: string): Promise<SysDictData[]> {
+  async dataList(id: string | undefined, type: string): Promise<SysDictData[]> {
+    if (type) {
+      const cacheKey = `${DICT_DATA_CACHE_KEY_PREFIX}${type}`;
+      const cached = await this.redisService.get<SysDictData[]>(cacheKey);
+      if (cached) return cached;
+    }
     let dict: SysDict | null = null;
     try {
       dict = await this.dictRepository.findOne({
-        where: { publicId, type },
+        where: id ? { id, type } : { activeType: type },
         relations: { dictData: true },
       });
     } catch (e: any) {
@@ -42,15 +51,21 @@ export class DictService {
     if (!dict) {
       throw new BadRequestException({ msg: '字典不存在', code: 400 });
     }
+
+    this.redisService.set(
+      `${DICT_DATA_CACHE_KEY_PREFIX}${dict.type}`,
+      dict.dictData,
+    );
+
     return dict.dictData;
   }
 
   // 已更新
-  async get(publicId: string): Promise<SysDict> {
+  async get(id: string): Promise<SysDict> {
     let dict: SysDict | null = null;
     try {
       dict = await this.dictRepository.findOne({
-        where: { publicId },
+        where: { id },
         relations: { dictData: true },
       });
     } catch (e: any) {
@@ -90,18 +105,29 @@ export class DictService {
 
   // 已更新
   async update(dto: UpdateDictTypeDto): Promise<void> {
-    const dict = await this.get(dto.publicId);
+    const dict = await this.get(dto.id);
+    const oldType = dict.type;
 
     try {
       await this.dictRepository.save({ ...dict, ...dto });
+      if (oldType !== dto.type) {
+        await this.redisService.del(`${DICT_DATA_CACHE_KEY_PREFIX}${oldType}`);
+      }
+      await this.redisService.del(`${DICT_DATA_CACHE_KEY_PREFIX}${dto.type}`);
     } catch (e: any) {
+      if (e instanceof OptimisticLockVersionMismatchError) {
+        throw new BadRequestException({
+          msg: '数据已被他人修改，请刷新后重试',
+          code: 409,
+        });
+      }
       throw new BadRequestException({ msg: '数据库更新错误', code: 400 });
     }
   }
 
   // 已更新
-  async delete(publicId: string): Promise<void> {
-    const dict = await this.get(publicId);
+  async delete(id: string): Promise<void> {
+    const dict = await this.get(id);
     if (!dict) {
       throw new BadRequestException({ msg: '字典不存在', code: 400 });
     }
@@ -113,6 +139,7 @@ export class DictService {
     }
     try {
       await this.dictRepository.softRemove(dict);
+      await this.redisService.del(`${DICT_DATA_CACHE_KEY_PREFIX}${dict.type}`);
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库删除错误', code: 400 });
     }
@@ -144,15 +171,17 @@ export class DictService {
 
     try {
       await this.dictDataRepository.save(dictData);
+      await this.redisService.del(`${DICT_DATA_CACHE_KEY_PREFIX}${dto.type}`);
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库保存错误', code: 400 });
     }
   }
 
-  // 已更新。更新字典数据时要传publicId
+  // 已更新。更新字典数据时要传id
   async updateData(dto: UpdateDictDataDto): Promise<void> {
     const dictData = await this.dictDataRepository.findOne({
-      where: { publicId: dto.publicId },
+      where: { id: dto.id },
+      relations: { dict: true },
     });
     if (!dictData) {
       throw new BadRequestException({ msg: '字典数据不存在', code: 400 });
@@ -160,16 +189,28 @@ export class DictService {
 
     try {
       await this.dictDataRepository.save({ ...dictData, ...dto });
+      if (dictData.dict) {
+        await this.redisService.del(
+          `${DICT_DATA_CACHE_KEY_PREFIX}${dictData.dict.type}`,
+        );
+      }
     } catch (e: any) {
+      if (e instanceof OptimisticLockVersionMismatchError) {
+        throw new BadRequestException({
+          msg: '数据已被他人修改，请刷新后重试',
+          code: 409,
+        });
+      }
       throw new BadRequestException({ msg: '数据库更新错误', code: 400 });
     }
   }
 
-  async deleteData(publicId: string): Promise<void> {
+  async deleteData(id: string): Promise<void> {
     let dictData: SysDictData | null = null;
     try {
       dictData = await this.dictDataRepository.findOne({
-        where: { publicId },
+        where: { id },
+        relations: { dict: true },
       });
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
@@ -182,6 +223,11 @@ export class DictService {
     }
     try {
       await this.dictDataRepository.softRemove(dictData);
+      if (dictData.dict) {
+        await this.redisService.del(
+          `${DICT_DATA_CACHE_KEY_PREFIX}${dictData.dict.type}`,
+        );
+      }
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库删除错误', code: 400 });
     }

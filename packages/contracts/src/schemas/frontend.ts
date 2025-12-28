@@ -1,20 +1,20 @@
 import { z } from "zod";
 
 export const frontendUserSchema = z.object({
-  publicId: z.string(),
+  id: z.string(),
   account: z.string(),
   name: z.string(),
   email: z.string(),
   sex: z.string(),
   avatar: z.string(),
   status: z.string(),
-  deptPublicId: z.string(),
+  deptId: z.string(),
   deptName: z.string(),
-  rolePublicIds: z.array(z.string()),
+  roleIds: z.array(z.string()),
 });
 
 export const frontendRoleSchema = z.object({
-  publicId: z.string(),
+  id: z.string(),
   name: z.string(),
   roleKey: z.string(),
   sortOrder: z.number(),
@@ -24,10 +24,10 @@ export const frontendRoleSchema = z.object({
 
 export const frontendDeptSchema: z.ZodType<unknown> = z.lazy(() =>
   z.object({
-    publicId: z.string(),
+    id: z.string(),
     name: z.string(),
     sortOrder: z.number(),
-    leaderPublicId: z.string().optional(),
+    leaderId: z.string().optional(),
     leaderName: z.string().optional(),
     leaderEmail: z.string().optional(),
     status: z.string(),
@@ -36,7 +36,7 @@ export const frontendDeptSchema: z.ZodType<unknown> = z.lazy(() =>
 );
 
 export type FrontendMenuBase = {
-  publicId: string;
+  id: string;
   name: string;
   sortOrder: number;
   path: string | null;
@@ -58,7 +58,7 @@ export type FrontendMenu = FrontendMenuBase & {
 
 export const frontendMenuSchema: z.ZodType<FrontendMenu> = z.lazy(() =>
   z.object({
-    publicId: z.string(),
+    id: z.string(),
     name: z.string(),
     sortOrder: z.number(),
     path: z.string().nullable(),
@@ -77,7 +77,7 @@ export const frontendMenuSchema: z.ZodType<FrontendMenu> = z.lazy(() =>
 );
 
 export const frontendDictTypeSchema = z.object({
-  publicId: z.string(),
+  id: z.string(),
   name: z.string(),
   type: z.string(),
   sortOrder: z.number(),
@@ -87,7 +87,7 @@ export const frontendDictTypeSchema = z.object({
 });
 
 export const frontendDictDataSchema = z.object({
-  publicId: z.string(),
+  id: z.string(),
   label: z.string(),
   value: z.string(),
   sortOrder: z.number(),

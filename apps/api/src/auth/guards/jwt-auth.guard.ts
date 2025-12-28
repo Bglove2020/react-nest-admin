@@ -13,6 +13,7 @@ import type { Repository } from 'typeorm';
 import { AlsService } from '@/common/als/als.service';
 import { SysUser } from '@/system/user/entities/user.entity';
 import { SysMenu } from '@/system/menu/entities/menu.entity';
+import { RedisService } from '@/common/redis/redis.service';
 
 type JwtPayload = { sub?: string; userAccount?: string; roleKeys?: string[] };
 
@@ -26,6 +27,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly userRepository: Repository<SysUser>,
     @InjectRepository(SysMenu)
     private readonly menuRepository: Repository<SysMenu>,
+    private readonly redisService: RedisService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -56,13 +58,12 @@ export class JwtAuthGuard implements CanActivate {
       (req as any).user = {
         ...payload,
         userId: user.id,
-        userPublicId: user.publicId,
         roleKeys: user.roleKeys,
         permissions: user.permissions,
         isAdmin: user.roleKeys.includes('admin'),
       };
       if (payload.sub) {
-        this.als.updateContext({ userPublicId: payload.sub });
+        this.als.updateContext({ userId: payload.sub });
       }
     } catch (error) {
       if (strict) {
@@ -78,16 +79,27 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('访问令牌缺少用户信息');
     }
 
+    const cachedUser = await this.redisService.get<{
+      id: string;
+      roleKeys: string[];
+      permissions: string[];
+    }>(`user-info-roles-permissions:${payload.sub}`);
+    if (cachedUser) {
+      console.log('查询到用户角色和权限缓存数据', cachedUser);
+      return cachedUser;
+    }
+    console.log('未查询到用户角色和权限缓存数据');
+
     const user = await this.userRepository.findOne({
-      where: { publicId: payload.sub },
+      where: { id: payload.sub },
       relations: { roles: true },
       select: {
         id: true,
-        publicId: true,
         roles: { id: true, roleKey: true },
       },
     });
 
+    console.log('jwt auth guard user', user);
     if (!user) {
       throw new UnauthorizedException('用户不存在或已被删除');
     }
@@ -121,7 +133,14 @@ export class JwtAuthGuard implements CanActivate {
       );
     }
 
-    return { ...user, roleKeys, permissions };
+    const result = { ...user, roleKeys, permissions };
+    console.log('jwt auth guard result', result);
+    await this.redisService.set(
+      `user-info-roles-permissions:${payload.sub}`,
+      result,
+      60 * 60 * 24,
+    );
+    return result;
   }
 
   private extractTokenFromHeader(request: Request): string | undefined {

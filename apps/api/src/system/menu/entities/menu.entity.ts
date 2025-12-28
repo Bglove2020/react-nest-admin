@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   OneToMany,
   ManyToMany,
@@ -10,26 +10,23 @@ import {
   BeforeInsert,
   DeleteDateColumn,
   Index,
+  VersionColumn,
 } from 'typeorm';
 import { SysRole } from '@/system/role/entities/role.entity';
-import { randomUUID } from 'node:crypto';
+import { v7 as uuidv7 } from 'uuid';
 
 @Entity('sys_menu')
 // @Index('uniq_sys_menu_name_active', ['activeName'], { unique: true })
 @Index('uniq_sys_menu_path_active', ['activePath'], { unique: true })
 @Index('uniq_sys_menu_perms_active', ['activePerms'], { unique: true })
 export class SysMenu {
-  @PrimaryGeneratedColumn({
-    comment: '菜单id，有序，自增，非uuid',
-  })
-  id: number;
+  @PrimaryColumn('char', {
+    name: 'id',
 
-  @Column({
-    name: 'public_id',
-    unique: true,
+    length: 36,
     comment: '菜单公开id，唯一且与id一一对应，用于对外暴露',
   })
-  publicId: string;
+  id: string;
 
   @Column({ length: 50, comment: '菜单名称' })
   name: string;
@@ -39,17 +36,20 @@ export class SysMenu {
   //   type: 'varchar',
   //   length: 120,
   //   asExpression:
-  //     "case when deleted_at is null then name else concat(name, '#', public_id) end",
+  //     "case when deleted_at is null then name else concat(name, '#', id) end",
   //   generatedType: 'VIRTUAL',
   //   select: false,
   // })
   // activeName: string | null;
 
-  @Column({ name: 'parent_id', default: 0, comment: '父菜单ID' })
-  parentId: number;
-
-  @Column({ name: 'ancestors', comment: '所有祖先菜单id，逗号分隔' })
-  ancestors: string;
+  @Column({
+    name: 'parent_id',
+    type: 'char',
+    length: 36,
+    default: '0',
+    comment: '父菜单ID',
+  })
+  parentId: string;
 
   @Column({ name: 'sort_order', type: 'int', comment: '显示顺序' })
   sortOrder: number;
@@ -69,7 +69,7 @@ export class SysMenu {
     length: 260,
     nullable: true,
     asExpression:
-      "case when path is null then null when deleted_at is null then path else concat(path, '#', public_id) end",
+      "case when path is null then null when deleted_at is null then path else concat(path, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
   })
@@ -129,7 +129,7 @@ export class SysMenu {
     length: 160,
     nullable: true,
     asExpression:
-      "case when perms is null then null when deleted_at is null then perms else concat(perms, '#', public_id) end",
+      "case when perms is null then null when deleted_at is null then perms else concat(perms, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
   })
@@ -158,6 +158,9 @@ export class SysMenu {
   })
   updateTime: Date;
 
+  @VersionColumn({ name: 'version', default: 0, comment: '版本号' })
+  version: number;
+
   @Column({ name: 'remark', length: 500, default: '', comment: '备注' })
   remark: string;
 
@@ -166,8 +169,8 @@ export class SysMenu {
 
   @BeforeInsert()
   setDefaultValues() {
-    if (!this.publicId) {
-      this.publicId = randomUUID();
+    if (!this.id) {
+      this.id = uuidv7();
     }
   }
 }

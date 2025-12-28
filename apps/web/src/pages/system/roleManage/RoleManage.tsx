@@ -27,7 +27,7 @@ type Filters = {
 };
 
 type role = {
-  publicId: string;
+  id: string;
   name: string;
   roleKey: string;
   status: "0" | "1";
@@ -74,7 +74,7 @@ export default function RoleManage() {
 
   const deleteRole = useCallback(async () => {
     return await axiosClient.delete(
-      `/system/role/delete/${activeRole?.publicId}`,
+      `/system/role/delete/${activeRole?.id}`,
     );
   }, [activeRole]);
 
@@ -143,10 +143,10 @@ export default function RoleManage() {
           checked={row.getValue("status") === "1"}
           onCheckedChange={(checked) => {
             console.log("checked", checked);
-            console.log("row.getValue('publicId')", row.original.publicId);
+            console.log("row.getValue('id')", row.original.id);
             axiosClient
               .post("/system/role/update", {
-                publicId: row.original.publicId,
+                id: row.original.id,
                 status: checked ? "1" : "0",
               })
               .then((res) => {

@@ -52,11 +52,11 @@ export class DeptController {
 
   @RequirePerms('system:dept:delete')
   @Delete('delete')
-  async delete(@Query('publicId') publicId: string) {
+  async delete(@Query('id') id: string) {
     this.loggingService.log('DELETE /system/dept/delete', {
-      params: { publicId },
+      params: { id },
     });
-    const { childCount, userCount } = await this.deptService.delete(publicId);
+    const { childCount, userCount } = await this.deptService.delete(id);
     const hasChild = childCount > 0;
     const hasUser = userCount > 0;
     let msg = '删除成功';

@@ -1,25 +1,25 @@
 import { z } from "zod";
 import {
   nameSchema,
-  optionalPublicIdSchema,
-  publicIdSchema,
+  optionalIdSchema,
+  idSchema,
   sortOrderSchema,
   statusSchema,
 } from "./common";
 
 export const deptCreateSchema = z.object({
   name: nameSchema,
-  parentPublicId: optionalPublicIdSchema,
+  parentId: optionalIdSchema,
   sortOrder: sortOrderSchema,
-  leaderPublicId: optionalPublicIdSchema,
+  leaderId: optionalIdSchema,
   status: statusSchema,
 });
 
 export const deptUpdateSchema = z.object({
-  publicId: publicIdSchema,
+  id: idSchema,
   name: nameSchema,
   sortOrder: sortOrderSchema,
-  leaderPublicId: optionalPublicIdSchema,
+  leaderId: optionalIdSchema,
   status: statusSchema,
 });
 

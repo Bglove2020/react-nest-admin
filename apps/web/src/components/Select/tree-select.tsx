@@ -27,22 +27,22 @@ type TreeSelectProps = {
 };
 
 // 递归获取节点祖先节点数组
-function getNodeAncestorsPublicIdArray(
+function getNodeAncestorsIdArray(
   nodes: TreeNode[],
-  publicId: string,
+  id: string,
   path: string[] = []
 ): string[] {
   for (const node of nodes) {
-    console.log("getNodeAncestorsPublicIdArray node:", node);
-    if (node.publicId === publicId) {
+    console.log("getNodeAncestorsIdArray node:", node);
+    if (node.id === id) {
       console.log("找到了对应的节点");
       return path;
     }
-    const currentPath = [...path, node.publicId];
+    const currentPath = [...path, node.id];
     if (node.children && node.children.length > 0) {
-      const found = getNodeAncestorsPublicIdArray(
+      const found = getNodeAncestorsIdArray(
         node.children,
-        publicId,
+        id,
         currentPath
       );
       if (found.length>0) return found;
@@ -51,16 +51,16 @@ function getNodeAncestorsPublicIdArray(
   return [];
 }
 
-// 根據publicId從data中找到對應的節點
-function findNodeByPublicId(
+// 根據id從data中找到對應的節點
+function findNodeById(
   nodes: TreeNode[],
-  publicId: string
+  id: string
 ): TreeNode | null {
   for (const node of nodes) {
-    if (node.publicId === publicId) {
+    if (node.id === id) {
       return node;
     } else if (node.children) {
-      const found = findNodeByPublicId(node.children, publicId);
+      const found = findNodeById(node.children, id);
       if (found) return found;
     }
   }
@@ -71,23 +71,23 @@ function findNodeByPublicId(
 function TreeNodeItem({
   node,
   level = 0,
-  selectedPublicId,
-  NodeAncestorsPublicIdArray,
+  selectedId,
+  NodeAncestorsIdArray,
   onSelect,
   allowSelectParent,
 }: {
   node: TreeNode;
   level?: number;
-  selectedPublicId?: string;
-  NodeAncestorsPublicIdArray?: string[];
+  selectedId?: string;
+  NodeAncestorsIdArray?: string[];
   onSelect: (id: string) => void;
   allowSelectParent?: boolean;
 }) {
   const [isOpen, setIsOpen] = React.useState(
-    NodeAncestorsPublicIdArray?.includes(node.publicId)
+    NodeAncestorsIdArray?.includes(node.id)
   );
   const hasChildren = node.children && node.children.length > 0;
-  const isSelected = node.publicId === selectedPublicId;
+  const isSelected = node.id === selectedId;
 
   return (
     <div>
@@ -109,7 +109,7 @@ function TreeNodeItem({
                   />
                 {/* </div> */}
               </CollapsibleTrigger>
-              <span className="flex-1 text-sm" onClick={() => onSelect(node.publicId)}>{node.name}</span>
+              <span className="flex-1 text-sm" onClick={() => onSelect(node.id)}>{node.name}</span>
               {isSelected && <CheckIcon className="w-4 h-4 text-primary" />}
             </div>
           ) : (
@@ -132,11 +132,11 @@ function TreeNodeItem({
             <div>
               {node.children!.map((child) => (
                 <TreeNodeItem
-                  key={child.publicId}
+                  key={child.id}
                   node={child}
                   level={level + 1}
-                  selectedPublicId={selectedPublicId}
-                  NodeAncestorsPublicIdArray={NodeAncestorsPublicIdArray}
+                  selectedId={selectedId}
+                  NodeAncestorsIdArray={NodeAncestorsIdArray}
                   onSelect={onSelect}
                   allowSelectParent={allowSelectParent}
                 />
@@ -148,7 +148,7 @@ function TreeNodeItem({
         <div
           aria-selected={isSelected}
           className="flex items-center gap-2 py-1.5 rounded-sm hover:bg-accent transition-colors aria-[selected=true]:bg-accent"
-          onClick={() => onSelect(node.publicId)}
+          onClick={() => onSelect(node.id)}
           style={{ paddingLeft: `${level * 1+0.25}rem` }}
         >
           <div className="w-3" />
@@ -170,10 +170,10 @@ export function TreeSelect({
   allowSelectParent = false,
 }: TreeSelectProps) {
   // 如果value有值，获取此节点的祖先节点数组
-  const NodeAncestorsPublicIdArray = value
-    ? getNodeAncestorsPublicIdArray(data, value)
+  const NodeAncestorsIdArray = value
+    ? getNodeAncestorsIdArray(data, value)
     : [];
-  const displayText = value ? findNodeByPublicId(data, value)?.name : "";
+  const displayText = value ? findNodeById(data, value)?.name : "";
   // 初始的展开状态为value对应的节点是否是当前节点的子节点
   const [open, setOpen] = React.useState(false);
 
@@ -183,14 +183,14 @@ export function TreeSelect({
     value,
     "data",
     data,
-    "NodeAncestorsPublicIdArray",
-    NodeAncestorsPublicIdArray,
+    "NodeAncestorsIdArray",
+    NodeAncestorsIdArray,
     "displayText",
     displayText
   );
 
-  const handleSelect = (publicId: string) => {
-    onChange?.(publicId);
+  const handleSelect = (id: string) => {
+    onChange?.(id);
     setOpen(false);
   };
 
@@ -224,10 +224,10 @@ export function TreeSelect({
           ) : (
             data.map((node) => (
               <TreeNodeItem
-                key={node.publicId}
+                key={node.id}
                 node={node}
-                selectedPublicId={value}
-                NodeAncestorsPublicIdArray={NodeAncestorsPublicIdArray}
+                selectedId={value}
+                NodeAncestorsIdArray={NodeAncestorsIdArray}
                 onSelect={handleSelect}
                 allowSelectParent={allowSelectParent}
               />

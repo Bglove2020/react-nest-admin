@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -67,13 +68,13 @@ export class DictController {
 
   // 已更新
   @RequirePerms('system:dict:query')
-  @Get(':publicId')
-  async get(@Param('publicId') publicId: string) {
-    this.loggingService.log('GET /system/dict/:publicId', {
-      params: { publicId },
+  @Get(':id')
+  async get(@Param('id') id: string) {
+    this.loggingService.log('GET /system/dict/:id', {
+      params: { id },
     });
-    const dict = await this.dictService.get(publicId);
-    this.loggingService.log('GET /system/dict/:publicId success', {
+    const dict = await this.dictService.get(id);
+    this.loggingService.log('GET /system/dict/:id success', {
       responseDescriptor: { data: toFrontendDictTypeDto(dict) },
     });
     return {
@@ -109,13 +110,13 @@ export class DictController {
 
   // 已更新
   @RequirePerms('system:dict:remove')
-  @Delete('delete/:publicId')
-  async delete(@Param('publicId') publicId: string) {
-    this.loggingService.log('DELETE /system/dict/delete/:publicId', {
-      params: { publicId },
+  @Delete('delete/:id')
+  async delete(@Param('id') id: string) {
+    this.loggingService.log('DELETE /system/dict/delete/:id', {
+      params: { id },
     });
-    await this.dictService.delete(publicId);
-    this.loggingService.log('DELETE /system/dict/delete/:publicId success');
+    await this.dictService.delete(id);
+    this.loggingService.log('DELETE /system/dict/delete/:id success');
     return { code: 200, msg: '字典删除成功', data: null };
   }
 
@@ -123,18 +124,20 @@ export class DictController {
   @RequirePerms('system:dict:list')
   @Get('data/list')
   async listData(
-    @Query('publicId') publicId: string,
-    @Query('type') type: string,
+    @Query('id') id?: string,
+    @Query('type') type?: string,
   ): Promise<{
     code: number;
     msg: string;
     data: FrontendDictData[];
   }> {
     this.loggingService.log('GET /system/dict/data/list', {
-      query: { publicId, type },
+      query: { id, type },
     });
-    console.log(publicId, type);
-    const dataList = await this.dictService.dataList(publicId, type);
+    if (!type) {
+      throw new BadRequestException({ msg: 'type 参数是必需的', code: 400 });
+    }
+    const dataList = await this.dictService.dataList(id, type);
     this.loggingService.log('GET /system/dict/data/list success', {
       responseDescriptor: { type: 'list', count: dataList.length },
     });
@@ -146,13 +149,13 @@ export class DictController {
   }
 
   // @RequirePerms('system:dict:query')
-  // @Get('data/:publicId')
-  // async getData(@Param('publicId') publicId: string) {
-  //   this.loggingService.log('GET /system/dict/data/:publicId', {
-  //     params: { publicId },
+  // @Get('data/:id')
+  // async getData(@Param('id') id: string) {
+  //   this.loggingService.log('GET /system/dict/data/:id', {
+  //     params: { id },
   //   });
-  //   const dictData = await this.dictService.getData(publicId);
-  //   this.loggingService.log('GET /system/dict/data/:publicId success');
+  //   const dictData = await this.dictService.getData(id);
+  //   this.loggingService.log('GET /system/dict/data/:id success');
   //   return {
   //     code: 200,
   //     msg: '字典数据获取成功',
@@ -202,15 +205,13 @@ export class DictController {
 
   // 已更新
   @RequirePerms('system:dict:remove')
-  @Delete('data/delete/:publicId')
-  async deleteData(@Param('publicId') publicId: string) {
-    this.loggingService.log('DELETE /system/dict/data/delete/:publicId', {
-      params: { publicId },
+  @Delete('data/delete/:id')
+  async deleteData(@Param('id') id: string) {
+    this.loggingService.log('DELETE /system/dict/data/delete/:id', {
+      params: { id },
     });
-    await this.dictService.deleteData(publicId);
-    this.loggingService.log(
-      'DELETE /system/dict/data/delete/:publicId success',
-    );
+    await this.dictService.deleteData(id);
+    this.loggingService.log('DELETE /system/dict/data/delete/:id success');
     return { code: 200, msg: '字典数据删除成功', data: null };
   }
 }

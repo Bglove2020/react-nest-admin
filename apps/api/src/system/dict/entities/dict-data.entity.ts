@@ -7,11 +7,12 @@ import {
   Index,
   JoinColumn,
   ManyToOne,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 import { SysDict } from './dict.entity';
-import { randomUUID } from 'crypto';
+import { v7 as uuidv7 } from 'uuid';
 
 @Entity('sys_dict_data')
 @Index('uniq_sys_dict_data_label_active', ['activeLabel'], {
@@ -21,15 +22,13 @@ import { randomUUID } from 'crypto';
   unique: true,
 })
 export class SysDictData {
-  @PrimaryGeneratedColumn({ comment: '字典数据自增ID' })
-  id: number;
+  @PrimaryColumn('char', {
+    name: 'id',
 
-  @Column({
-    name: 'public_id',
-    unique: true,
+    length: 36,
     comment: '字典数据公开id，唯一且与id一一对应，用于对外暴露',
   })
-  publicId: string;
+  id: string;
 
   @Column({
     name: 'label',
@@ -43,7 +42,7 @@ export class SysDictData {
     type: 'varchar',
     length: 260,
     asExpression:
-      "case when deleted_at is null then concat(label,'#',dict_id) else concat(label, '#', public_id) end",
+      "case when deleted_at is null then concat(label,'#',dict_id) else concat(label, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
     insert: false,
@@ -63,7 +62,7 @@ export class SysDictData {
     type: 'varchar',
     length: 260,
     asExpression:
-      "case when deleted_at is null then concat(value,'#',dict_id) else concat(value, '#', public_id) end",
+      "case when deleted_at is null then concat(value,'#',dict_id) else concat(value, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
     insert: false,
@@ -119,6 +118,9 @@ export class SysDictData {
   })
   updateTime: Date;
 
+  @VersionColumn({ name: 'version', default: 0, comment: '版本号' })
+  version: number;
+
   @DeleteDateColumn({
     name: 'deleted_at',
     type: 'datetime',
@@ -132,8 +134,8 @@ export class SysDictData {
 
   @BeforeInsert()
   setDefaultValues() {
-    if (!this.publicId) {
-      this.publicId = randomUUID();
+    if (!this.id) {
+      this.id = uuidv7();
     }
   }
 }

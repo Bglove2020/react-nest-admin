@@ -23,7 +23,7 @@ const LEVEL_LABELS: Record<number, string> = {
  * 对象属性以缩进和换行的方式展示
  */
 function formatLogEntry(log: Record<string, any>): string {
-  const { time, level, msg, requestId, userPublicId, query, ...rest } = log;
+  const { time, level, msg, requestId, userId, query, ...rest } = log;
   const levelLabel = LEVEL_LABELS[level] || 'INFO';
 
   // 格式化时间戳
@@ -37,8 +37,8 @@ function formatLogEntry(log: Record<string, any>): string {
   if (requestId) {
     output += `\n[requestId:${requestId}]`;
   }
-  if (userPublicId) {
-    output += ` [userPublicId:${userPublicId}]`;
+  if (userId) {
+    output += ` [userId:${userId}]`;
   }
   if (query) {
     output += `\n[query:\n${query}\n]`;
@@ -87,8 +87,8 @@ export class LoggingService implements LoggerService {
           context.requestId = requestId;
         }
         // 只有登录了才有用户，携带token请求是才会有用户id
-        const userPublicId = this.als.getUserPublicId();
-        if (userPublicId) context.userPublicId = userPublicId; // 自动添加到所有日志
+        const userId = this.als.getUserId();
+        if (userId) context.userId = userId; // 自动添加到所有日志
 
         return context;
       },

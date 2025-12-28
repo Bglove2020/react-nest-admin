@@ -1,40 +1,38 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   OneToMany,
-  ManyToOne,  
+  ManyToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   BeforeInsert,
-  DeleteDateColumn, Index,
+  DeleteDateColumn,
+  Index,
+  VersionColumn,
 } from 'typeorm';
-import { randomUUID } from 'crypto';
+import { v7 as uuidv7 } from 'uuid';
 import { SysUser } from '@/system/user/entities/user.entity';
 
 // 定义一个typeORM实体类的步骤
-// 1. 导入Entity, PrimaryGeneratedColumn, Column等装饰器
-// 2. 使用@Entity()装饰器标记该类为一个实体类，传入一个参数用于指定表名。
-// 3. 使用@PrimaryGeneratedColumn()装饰器标记主键列
+// 1. 导入Entity, PrimaryColumn,
+// 2. 使用@Entity()装饰器标记该类为一个实体类，传入一个参数用于指定表名�?
+// 3. 使用@PrimaryColumn()装饰器标记主键列
 // 4. 使用@Column()装饰器标记其他列
-// 5. 定义其他关系装饰器，如@OneToMany, @ManyToOne, @ManyToMany等
+// 5. 定义其他关系装饰器，如@OneToMany, @ManyToOne, @ManyToMany�?
 
 // mysql在windows平台下不区分数据库名、表名、列名的大小写，因此建议使用小写字母+下划线的形式
 @Entity('sys_dept')
 @Index('uniq_sys_dept_active_name', ['activeName'], { unique: true })
 export class SysDept {
-  @PrimaryGeneratedColumn({
-    comment: '部门id，有序，自增，非uuid',
-  })
-  id: number;
+  @PrimaryColumn('char', {
+    name: 'id',
 
-  @Column({
-    name: 'public_id',
-    unique: true,
-    comment: '部门公开id，唯一且与id一一对应，用于对外暴露',
+    length: 36,
+    comment: '部门id，唯一且与id一一对应，用于对外暴露',
   })
-  publicId: string;
+  id: string;
 
   @Column({
     name: 'name',
@@ -47,7 +45,7 @@ export class SysDept {
     type: 'varchar',
     length: 320,
     asExpression:
-      "case when deleted_at is null then name else concat(name, '#', public_id) end",
+      "case when deleted_at is null then name else concat(name, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
   })
@@ -55,15 +53,12 @@ export class SysDept {
 
   @Column({
     name: 'parent_id',
-    comment: '父部门id（表示根部门为0）',
+    type: 'char',
+    length: 36,
+    default: '0',
+    comment: '父部门id（表示根部门）',
   })
-  parentId: number;
-
-  @Column({
-    name: 'ancestors',
-    comment: '所有祖先部门id，逗号分隔',
-  })
-  ancestors: string;
+  parentId: string;
 
   @Column({
     name: 'sort_order',
@@ -80,7 +75,7 @@ export class SysDept {
   status: string;
 
   @ManyToOne(() => SysUser, { nullable: true })
-  @JoinColumn({ name: 'leader_id'})
+  @JoinColumn({ name: 'leader_id' })
   leader: SysUser | null;
 
   @Column({
@@ -89,7 +84,7 @@ export class SysDept {
     comment: '更新者',
   })
   updateBy: string;
-    
+
   @Column({
     name: 'create_by',
     nullable: true,
@@ -111,13 +106,24 @@ export class SysDept {
   })
   updateTime: Date;
 
-  @DeleteDateColumn({ name: 'deleted_at', type: 'datetime', comment: '删除时间' })
+  @VersionColumn({
+    name: 'version',
+    default: 0,
+    comment: '版本号（用于乐观锁）',
+  })
+  version: number;
+
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'datetime',
+    comment: '删除时间',
+  })
   deletedAt: Date | null;
 
   @BeforeInsert()
-  setPublicId() {
-    if (!this.publicId) {
-      this.publicId = randomUUID();
+  setId() {
+    if (!this.id) {
+      this.id = uuidv7();
     }
   }
 

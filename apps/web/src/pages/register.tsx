@@ -110,8 +110,8 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
       </CardHeader>
       <CardContent className="relative">
         <form onSubmit={handleSubmit(onSubmit)}>
-          <FieldGroup className="!gap-4">
-            <Field className="!gap-2">
+          <FieldGroup className="gap-4!">
+            <Field className="gap-2!">
               <FieldLabel htmlFor="name">用户名</FieldLabel>
               <Input
                 id="name"
@@ -126,7 +126,7 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
               )}
             </Field>
 
-            <Field className="!gap-2">
+            <Field className="gap-2!">
               <FieldLabel htmlFor="account">
                 <span>账号</span>
                 <HoverCardFormItem content="账号长度最少6位，不能重复" />

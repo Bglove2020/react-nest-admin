@@ -3,7 +3,7 @@ import type { FrontendMenuBase } from '@ruoyi/contracts';
 
 export function toFrontendDto(menu: SysMenu): FrontendMenuBase {
   return {
-    publicId: menu.publicId,
+    id: menu.id,
     name: menu.name,
     sortOrder: menu.sortOrder,
     path: menu.path,

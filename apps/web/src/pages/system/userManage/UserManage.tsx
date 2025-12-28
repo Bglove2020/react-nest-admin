@@ -38,14 +38,14 @@ type Filters = {
 };
 
 type user = {
-  publicId: string;
+  id: string;
   account: string;
   name: string;
   email: string;
   sex: "0" | "1" | "2";
   status: "0" | "1";
-  deptPublicId?: string;
-  rolePublicIds?: string[];
+  deptId?: string;
+  roleIds?: string[];
 };
 
 // 将 filters 转换为 { id, value } 对象数组
@@ -90,7 +90,7 @@ export default function UserManage() {
 
   const deleteUser = useCallback(async () => {
     return await axiosClient.delete(
-      `/system/user/delete/${activeUser?.publicId}`,
+      `/system/user/delete/${activeUser?.id}`,
     );
   }, [activeUser]);
 
@@ -183,10 +183,10 @@ export default function UserManage() {
           checked={row.getValue("status") === "1"}
           onCheckedChange={(checked) => {
             console.log("checked", checked);
-            console.log("row.getValue('publicId')", row.original.publicId);
+            console.log("row.getValue('id')", row.original.id);
             axiosClient
               .post("/system/user/update", {
-                publicId: row.original.publicId,
+                id: row.original.id,
                 status: checked ? "1" : "0",
               })
               .then((res) => {

@@ -23,12 +23,12 @@ export function DialogMultiDeleteConfirm({
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  data: {publicId: string, account: string}[];
+  data: {id: string, account: string}[];
   selected:Record<string, boolean>;
   onSuccess: () => void;
 }) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const accounts = data.filter(row => selected[row.publicId]).map(row => row.account)
+  const accounts = data.filter(row => selected[row.id]).map(row => row.account)
 
   const onSubmit = async () => {
     try {

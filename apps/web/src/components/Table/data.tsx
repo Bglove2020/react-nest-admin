@@ -27,7 +27,7 @@ import {
 import { DataTablePagination } from "@/components/Table/pagination";
 import { SingleSelect } from "@/components/Select/single-select";
 
-export function DataTable<T extends { publicId: string }>({
+export function DataTable<T extends { id: string }>({
   filters,
   data,
   columns,
@@ -60,7 +60,7 @@ export function DataTable<T extends { publicId: string }>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: onRowSelectionChange,
     onPaginationChange: setPagination,
-    getRowId: (row) => row.publicId,
+    getRowId: (row) => row.id,
     state: {
       sorting,
       columnFilters: filters,
@@ -164,7 +164,7 @@ export function DataTable<T extends { publicId: string }>({
                 { label: "20", value: 20 },
                 { label: "30", value: 30 },
               ]}
-              className="!w-11"
+              className="w-11!"
             />
             <span className="ml-2 w-12">行 / 页</span>
           </div>

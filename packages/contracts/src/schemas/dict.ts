@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { publicIdSchema, sortOrderSchema, statusSchema } from "./common";
+import { idSchema, sortOrderSchema, statusSchema } from "./common";
 
 export const dictTypeCreateSchema = z.object({
   name: z.string().min(1, "请输入字典名称"),
@@ -9,7 +9,7 @@ export const dictTypeCreateSchema = z.object({
 });
 
 export const dictTypeUpdateSchema = dictTypeCreateSchema.extend({
-  publicId: publicIdSchema,
+  id: idSchema,
 });
 
 export const dictDataCreateSchema = z.object({
@@ -21,7 +21,7 @@ export const dictDataCreateSchema = z.object({
 });
 
 export const dictDataUpdateSchema = dictDataCreateSchema.extend({
-  publicId: publicIdSchema,
+  id: idSchema,
 });
 
 export type DictTypeCreatePayload = z.infer<typeof dictTypeCreateSchema>;

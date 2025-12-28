@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
-  optionalPublicIdSchema,
-  publicIdSchema,
+  optionalIdSchema,
+  idSchema,
   sortOrderSchema,
   statusSchema,
 } from "./common";
@@ -34,7 +34,7 @@ export const menuCatalogSchema = menuCatalogBaseSchema.refine(
 
 const menuItemBaseSchema = z.object({
   menuType: z.literal("C"),
-  parentPublicId: optionalPublicIdSchema,
+  parentId: optionalIdSchema,
   name: z.string().min(1, "请输入菜单名称"),
   perms: z.string().min(1, "请输入权限字符"),
   sortOrder: sortOrderSchema,
@@ -48,7 +48,7 @@ export const menuItemSchema = menuItemBaseSchema;
 
 const menuButtonBaseSchema = z.object({
   menuType: z.literal("F"),
-  parentPublicId: optionalPublicIdSchema,
+  parentId: optionalIdSchema,
   name: z.string().min(1, "请输入按钮名称"),
   perms: z.string().min(1, "请输入权限字符"),
   sortOrder: sortOrderSchema,
@@ -66,14 +66,12 @@ export const menuFormSchema = z.discriminatedUnion("menuType", [
 export const menuCreateSchema = menuFormSchema;
 
 export const menuUpdateSchema = z.discriminatedUnion("menuType", [
-  menuCatalogBaseSchema
-    .extend({ publicId: publicIdSchema })
-    .refine(refineCatalogPath, {
-      message: "\u5916\u94fe\u5fc5\u987b\u586b\u5199\u8def\u5f84",
-      path: ["path"],
-    }),
-  menuItemBaseSchema.extend({ publicId: publicIdSchema }),
-  menuButtonBaseSchema.extend({ publicId: publicIdSchema }),
+  menuCatalogBaseSchema.extend({ id: idSchema }).refine(refineCatalogPath, {
+    message: "\u5916\u94fe\u5fc5\u987b\u586b\u5199\u8def\u5f84",
+    path: ["path"],
+  }),
+  menuItemBaseSchema.extend({ id: idSchema }),
+  menuButtonBaseSchema.extend({ id: idSchema }),
 ]);
 
 export type MenuFormPayload = z.infer<typeof menuFormSchema>;

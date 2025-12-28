@@ -55,12 +55,12 @@ export class UserController {
   }
 
   @RequirePerms('system:user:query')
-  @Get('get/:publicId')
-  async get(@Param('publicId') publicId: string) {
+  @Get('get/:id')
+  async get(@Param('id') id: string) {
     this.loggingService.log('GET /system/user/get', {
-      params: { publicId: publicId },
+      params: { id: id },
     });
-    const user = await this.userService.get(publicId);
+    const user = await this.userService.get(id);
     if (user) {
       this.loggingService.log('GET /system/user/get success', {
         responseDescriptor: { data: toFrontendDto(user) },
@@ -116,12 +116,12 @@ export class UserController {
   }
 
   @RequirePerms('system:user:remove')
-  @Delete('delete/:publicId')
-  async delete(@Param('publicId') publicId: string) {
+  @Delete('delete/:id')
+  async delete(@Param('id') id: string) {
     this.loggingService.log('DELETE /system/user/delete', {
-      params: { publicId: publicId },
+      params: { id: id },
     });
-    await this.userService.delete(publicId);
+    await this.userService.delete(id);
     this.loggingService.log('DELETE /system/user/delete success');
     return { code: 200, msg: '用户删除成功', data: null };
   }

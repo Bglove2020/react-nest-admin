@@ -6,25 +6,24 @@ import {
   Entity,
   Index,
   OneToMany,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   UpdateDateColumn,
+  VersionColumn,
 } from 'typeorm';
 import { SysDictData } from './dict-data.entity';
-import { randomUUID } from 'crypto';
+import { v7 as uuidv7 } from 'uuid';
 
 @Entity('sys_dict_type')
 @Index('uniq_sys_dict_type_active', ['activeType'], { unique: true })
 @Index('uniq_sys_dict_name_active', ['activeName'], { unique: true })
 export class SysDict {
-  @PrimaryGeneratedColumn({ comment: '字典类型自增ID' })
-  id: number;
+  @PrimaryColumn('char', {
+    name: 'id',
 
-  @Column({
-    name: 'public_id',
-    unique: true,
+    length: 36,
     comment: '字典类型公开id，唯一且与id一一对应，用于对外暴露',
   })
-  publicId: string;
+  id: string;
 
   @Column({ name: 'name', length: 100, comment: '字典名称' })
   name: string;
@@ -34,7 +33,7 @@ export class SysDict {
     type: 'varchar',
     length: 180,
     asExpression:
-      "case when deleted_at is null then name else concat(name, '#', public_id) end",
+      "case when deleted_at is null then name else concat(name, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
     insert: false,
@@ -50,7 +49,7 @@ export class SysDict {
     type: 'varchar',
     length: 200,
     asExpression:
-      "case when deleted_at is null then type else concat(type, '#', public_id) end",
+      "case when deleted_at is null then type else concat(type, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
     insert: false,
@@ -105,6 +104,9 @@ export class SysDict {
   })
   updateTime: Date;
 
+  @VersionColumn({ name: 'version', default: 0, comment: '版本号' })
+  version: number;
+
   @DeleteDateColumn({
     name: 'deleted_at',
     type: 'datetime',
@@ -117,8 +119,8 @@ export class SysDict {
 
   @BeforeInsert()
   setDefaultValues() {
-    if (!this.publicId) {
-      this.publicId = randomUUID();
+    if (!this.id) {
+      this.id = uuidv7();
     }
   }
 }

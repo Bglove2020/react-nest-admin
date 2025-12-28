@@ -6,12 +6,7 @@
   DialogFooter,
   DialogHeader,
 } from "@ruoyi/ui";
-import {
-  Field,
-  FieldError,
-  FieldGroup,
-  FieldLabel,
-} from "@ruoyi/ui";
+import { Field, FieldError, FieldGroup, FieldLabel } from "@ruoyi/ui";
 import { Input } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
 import * as z from "zod";
@@ -75,12 +70,12 @@ export default function AddDeptDialog({
     shouldUnregister: true,
     defaultValues: {
       name: isCreate ? "" : activeDept?.name || "",
-      parentPublicId: activeDept?.publicId || "",
+      parentId: activeDept?.id || "",
       sortOrder: isCreate ? 0 : activeDept?.sortOrder || 0,
       status: (isCreate ? "1" : activeDept?.status === "0" ? "0" : "1") as
         | "1"
         | "0",
-      leaderPublicId: isCreate ? "" : activeDept?.leaderPublicId || "",
+      leaderId: isCreate ? "" : activeDept?.leaderId || "",
     },
   });
 
@@ -93,11 +88,11 @@ export default function AddDeptDialog({
         accountData = data;
       } else {
         accountData = {
-          publicId: activeDept?.publicId,
+          id: activeDept?.id,
           name: data.name,
           sortOrder: data.sortOrder,
           status: data.status,
-          leaderPublicId: data.leaderPublicId,
+          leaderId: data.leaderId,
         };
       }
       const res = await axiosClient.post(
@@ -123,12 +118,12 @@ export default function AddDeptDialog({
           <DialogTitle>{isCreate ? "新增部门" : "编辑部门"}</DialogTitle>
         </DialogHeader>
         <form className="max-h-[50vh overflow-y-auto py-2 pr-2 sm:max-h-[65vh]">
-          <FieldGroup className="!gap-4">
+          <FieldGroup className="gap-4!">
             {isCreate && (
               <Field orientation="grid">
-                <FieldLabel htmlFor="parentPublicId">父部门</FieldLabel>
+                <FieldLabel htmlFor="parentId">父部门</FieldLabel>
                 <Controller
-                  name="parentPublicId"
+                  name="parentId"
                   control={control}
                   render={({ field }) => (
                     <TreeSelect
@@ -141,9 +136,9 @@ export default function AddDeptDialog({
                     />
                   )}
                 />
-                {errors.parentPublicId && (
+                {errors.parentId && (
                   <FieldError
-                    errors={[errors.parentPublicId]}
+                    errors={[errors.parentId]}
                     className="col-start-2"
                   />
                 )}
@@ -180,9 +175,9 @@ export default function AddDeptDialog({
             </Field>
 
             <Field orientation="grid">
-              <FieldLabel htmlFor="leaderPublicId">负责人</FieldLabel>
+              <FieldLabel htmlFor="leaderId">负责人</FieldLabel>
               <Controller
-                name="leaderPublicId"
+                name="leaderId"
                 control={control}
                 render={({ field }) => (
                   <SingleSelect
@@ -190,7 +185,7 @@ export default function AddDeptDialog({
                     placeholder="请选择负责人"
                     options={userList.map((user: any) => ({
                       label: user.name,
-                      value: user.publicId,
+                      value: user.id,
                     }))}
                     value={field.value}
                     // label="负责人"
@@ -198,9 +193,9 @@ export default function AddDeptDialog({
                   />
                 )}
               />
-              {errors.leaderPublicId && (
+              {errors.leaderId && (
                 <FieldError
-                  errors={[errors.leaderPublicId]}
+                  errors={[errors.leaderId]}
                   className="col-start-2"
                 />
               )}

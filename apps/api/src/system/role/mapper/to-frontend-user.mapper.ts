@@ -3,12 +3,12 @@ import type { FrontendRole } from '@ruoyi/contracts';
 
 export function toFrontendDto(role: SysRole): FrontendRole{
     return {
-        publicId: role.publicId,
+        id: role.id,
         name: role.name,
         roleKey: role.roleKey,
         sortOrder: role.sortOrder,
         status: role.status,
-        menuIds: role.menus.map((menu) => menu.publicId),
+        menuIds: role.menus.map((menu) => menu.id),
     };
 }
 

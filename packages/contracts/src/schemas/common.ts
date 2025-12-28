@@ -29,11 +29,14 @@ export const sexSchema = z.enum(["0", "1", "2"]);
 
 export const statusSchema = z.enum(["0", "1"]);
 
-export const publicIdSchema = z
-  .string()
-  .uuid({ message: "publicId 格式不正确" });
+const uuidV7CompatibleRegex =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-7][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const optionalPublicIdSchema = publicIdSchema
+export const idSchema = z
+  .string()
+  .regex(uuidV7CompatibleRegex, { message: "id 格式不正确" });
+
+export const optionalIdSchema = idSchema
   .optional()
   .or(z.literal(""));
 

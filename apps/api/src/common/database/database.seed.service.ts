@@ -9,6 +9,7 @@ import { SysDict } from '@/system/dict/entities/dict.entity';
 import { SysDictData } from '@/system/dict/entities/dict-data.entity';
 import * as bcrypt from 'bcryptjs';
 import { LoggingService } from '../logging/logging.service';
+import { updateEnvFile } from '../utils/env-file.util';
 
 /**
  * 数据库种子服务
@@ -67,6 +68,9 @@ export class DatabaseSeedService {
       await this.createUser(dept, role);
       this.loggingService.log('用户数据初始化完成');
 
+      // 6. 将默认部门和角色的 ID 写入环境变量
+      await this.writeIdsToEnvFile(dept, role);
+
       this.loggingService.log('数据库种子数据初始化完成！');
     } catch (error) {
       this.loggingService.error('数据库种子数据初始化失败:', error);
@@ -79,8 +83,7 @@ export class DatabaseSeedService {
   private async createDept(): Promise<SysDept> {
     const dept = this.deptRepository.create({
       name: '默认部门',
-      parentId: 0,
-      ancestors: '0',
+      parentId: '0',
       sortOrder: 0,
       status: '1',
       updateBy: 'auto_seed',
@@ -114,8 +117,7 @@ export class DatabaseSeedService {
   private async createMenus(role: SysRole): Promise<void> {
     const dashboardMenu = this.menuRepository.create({
       name: '首页',
-      parentId: 0,
-      ancestors: '0',
+      parentId: '0',
       sortOrder: 0,
       path: 'dashboard',
       menuType: 'C',
@@ -130,8 +132,7 @@ export class DatabaseSeedService {
     // 创建主菜单
     const systemMenu = this.menuRepository.create({
       name: '系统管理',
-      parentId: 0,
-      ancestors: '0',
+      parentId: '0',
       sortOrder: 1,
       path: 'system',
       menuType: 'M',
@@ -147,7 +148,6 @@ export class DatabaseSeedService {
     const userMenu = this.menuRepository.create({
       name: '用户管理',
       parentId: savedSystemMenu.id,
-      ancestors: `0,${savedSystemMenu.id}`,
       sortOrder: 1,
       path: 'system/user-management',
       menuType: 'C',
@@ -164,7 +164,6 @@ export class DatabaseSeedService {
     const roleMenu = this.menuRepository.create({
       name: '角色管理',
       parentId: savedSystemMenu.id,
-      ancestors: `0,${savedSystemMenu.id}`,
       sortOrder: 2,
       path: 'system/role-management',
       menuType: 'C',
@@ -181,7 +180,6 @@ export class DatabaseSeedService {
     const deptMenu = this.menuRepository.create({
       name: '部门管理',
       parentId: savedSystemMenu.id,
-      ancestors: `0,${savedSystemMenu.id}`,
       sortOrder: 3,
       path: 'system/dept-management',
       menuType: 'C',
@@ -198,7 +196,6 @@ export class DatabaseSeedService {
     const menuMenu = this.menuRepository.create({
       name: '菜单管理',
       parentId: savedSystemMenu.id,
-      ancestors: `0,${savedSystemMenu.id}`,
       sortOrder: 4,
       path: 'system/menu-management',
       menuType: 'C',
@@ -214,7 +211,6 @@ export class DatabaseSeedService {
     const dictMenu = this.menuRepository.create({
       name: '字典管理',
       parentId: savedSystemMenu.id,
-      ancestors: `0,${savedSystemMenu.id}`,
       sortOrder: 5,
       path: 'system/dict-management',
       menuType: 'C',
@@ -230,7 +226,6 @@ export class DatabaseSeedService {
     const dictDataMenu = this.menuRepository.create({
       name: '字典数据管理',
       parentId: savedSystemMenu.id,
-      ancestors: `0,${savedSystemMenu.id}`,
       sortOrder: 6,
       path: 'system/dict-data-management',
       menuType: 'C',
@@ -322,7 +317,6 @@ export class DatabaseSeedService {
       this.menuRepository.create({
         name: config.name,
         parentId: parentMenu.id,
-        ancestors: `${parentMenu.ancestors},${parentMenu.id}`,
         sortOrder: config.sortOrder,
         path: null,
         menuType: 'F',
@@ -447,5 +441,23 @@ export class DatabaseSeedService {
     });
 
     await this.userRepository.save(user);
+  }
+
+  /**
+   * 将默认部门和角色的 ID 写入环境变量文件
+   */
+  private async writeIdsToEnvFile(dept: SysDept, role: SysRole): Promise<void> {
+    try {
+      updateEnvFile([
+        { key: 'DEFAULT_DEPT_ID', value: dept.id },
+        { key: 'DEFAULT_ROLE_ID', value: role.id },
+      ]);
+      this.loggingService.log(
+        `已将默认部门 ID (${dept.id}) 和默认角色 ID (${role.id}) 写入环境变量文件`,
+      );
+    } catch (error) {
+      this.loggingService.error('写入环境变量文件失败:', error);
+      // 不抛出错误，避免影响 seed 流程
+    }
   }
 }

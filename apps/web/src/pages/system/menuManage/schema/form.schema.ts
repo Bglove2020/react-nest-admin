@@ -42,7 +42,7 @@ export const DEFAULT_VALUES: Record<MenuType, Partial<TFormSchema>> = {
     status: "1",
     visible: "1",
     isFrame: "0",
-    parentPublicId: "",
+    parentId: "",
   },
   F: {
     menuType: "F",
@@ -50,7 +50,7 @@ export const DEFAULT_VALUES: Record<MenuType, Partial<TFormSchema>> = {
     perms: "",
     sortOrder: 0,
     status: "1",
-    parentPublicId: "",
+    parentId: "",
   },
 };
 
@@ -81,14 +81,14 @@ export function getInitialValues(
     if (activeData?.menuType === "M")
       return {
         ...DEFAULT_VALUES["C"],
-        parentPublicId: activeData?.publicId as string,
+        parentId: activeData?.id as string,
       };
     if (activeData?.menuType === "C")
       return {
         ...DEFAULT_VALUES["F"],
-        parentPublicId: activeData?.publicId as string,
+        parentId: activeData?.id as string,
       };
-    // if(activeData?.menuType === "F") return {...DEFAULT_VALUES["F"], parentPublicId: activeData?.publicId};
+    // if(activeData?.menuType === "F") return {...DEFAULT_VALUES["F"], parentId: activeData?.id};
     return DEFAULT_VALUES["M"];
   } else {
     const extracted = extractFieldsByType(
@@ -100,6 +100,7 @@ export function getInitialValues(
     return {
       ...DEFAULT_VALUES[activeData!.menuType as MenuType],
       ...extracted,
+      parentId: undefined,
     };
   }
 }

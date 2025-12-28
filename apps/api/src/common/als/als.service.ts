@@ -19,8 +19,8 @@ export class AlsService {
   }
 
   // 获取 userId
-  getUserPublicId(): string | undefined {
-    return this.als.getStore()?.userPublicId;
+  getUserId(): string | undefined {
+    return this.als.getStore()?.userId;
   }
 
   // 更新上下文（直接修改 store 对象，避免 enterWith 在 async 边界的问题）

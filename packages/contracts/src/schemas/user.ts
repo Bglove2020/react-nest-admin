@@ -4,7 +4,7 @@ import {
   emailSchema,
   nameSchema,
   passwordSchema,
-  publicIdSchema,
+  idSchema,
   sexSchema,
   statusSchema,
 } from "./common";
@@ -15,15 +15,15 @@ export const userCreateSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
   sex: sexSchema,
-  deptPublicId: publicIdSchema.optional(),
-  rolePublicIds: z.array(publicIdSchema).optional(),
+  deptId: idSchema.optional(),
+  roleIds: z.array(idSchema).optional(),
   status: statusSchema,
 });
 
 export const userCreateFormSchema = userCreateSchema
   .extend({
-    deptPublicId: publicIdSchema,
-    rolePublicIds: z.array(publicIdSchema).min(1, "请至少选择一个角色"),
+    deptId: idSchema,
+    roleIds: z.array(idSchema).min(1, "请至少选择一个角色"),
     confirmPassword: passwordSchema,
     status: statusSchema,
   })
@@ -33,16 +33,16 @@ export const userCreateFormSchema = userCreateSchema
   });
 
 export const userUpdateSchema = z.object({
-  publicId: publicIdSchema,
+  id: idSchema,
   name: nameSchema,
   sex: sexSchema,
   status: statusSchema,
-  deptPublicId: publicIdSchema,
-  rolePublicIds: z.array(publicIdSchema).min(1, "请至少选择一个角色"),
+  deptId: idSchema,
+  roleIds: z.array(idSchema).min(1, "请至少选择一个角色"),
 });
 
 export const userResetPasswordSchema = z.object({
-  publicId: publicIdSchema,
+  id: idSchema,
   password: passwordSchema,
 });
 

@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "pnpm -r --filter ./packages/* build && pnpm -r --filter ./apps/* build",
+    "dev:debug": "pnpm --parallel --filter @ruoyi/web dev --filter @ruoyi/api start:debug",
     "dev": "pnpm -r --parallel dev",
     "seed": "pnpm --filter @ruoyi/api seed",
     "lint": "pnpm -r --filter ./apps/* lint",

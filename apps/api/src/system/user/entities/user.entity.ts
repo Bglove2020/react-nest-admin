@@ -1,6 +1,6 @@
 import {
   Entity,
-  PrimaryGeneratedColumn,
+  PrimaryColumn,
   Column,
   ManyToOne,
   JoinColumn,
@@ -13,8 +13,9 @@ import {
   BeforeInsert,
   Index,
   DeleteDateColumn,
+  VersionColumn,
 } from 'typeorm';
-import { randomUUID } from 'crypto';
+import { v7 as uuidv7 } from 'uuid';
 import { SysDept } from '@/system/dept/entities/dept.entity';
 import { SysRole } from '@/system/role/entities/role.entity';
 
@@ -22,19 +23,15 @@ import { SysRole } from '@/system/role/entities/role.entity';
 @Index('uniq_sys_user_account_active', ['activeAccount'], { unique: true })
 @Index('uniq_sys_user_email_active', ['activeEmail'], { unique: true })
 export class SysUser {
-  // 使用装饰器：@PrimaryGeneratedColumn，修饰的字段为主键，且自增。
-  // @PrimaryGeneratedColumn装饰器可以传入一个Column options对象，用于配置主键列的行为。
-  @PrimaryGeneratedColumn({
-    comment: '用户id，有序，自增，非uuid',
-  })
-  id: number;
+  // 使用装饰器：@PrimaryColumn，修饰的字段为主键，且自增。
+  // @PrimaryColumn装饰器可以传入一个Column options对象，用于配置主键列的行为。
+  @PrimaryColumn('char', {
+    name: 'id',
 
-  @Column({
-    name: 'public_id',
-    unique: true,
+    length: 36,
     comment: '用户公开id，唯一且与id一一对应，用于对外暴露',
   })
-  publicId: string;
+  id: string;
 
   @Column({ length: 255, comment: '用户名称' })
   name: string;
@@ -47,7 +44,7 @@ export class SysUser {
     type: 'varchar',
     length: 320,
     asExpression:
-      "case when deleted_at is null then account else concat(account, '#', public_id) end",
+      "case when deleted_at is null then account else concat(account, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
   })
@@ -61,7 +58,7 @@ export class SysUser {
     type: 'varchar',
     length: 320,
     asExpression:
-      "case when deleted_at is null then email else concat(email, '#', public_id) end",
+      "case when deleted_at is null then email else concat(email, '#', id) end",
     generatedType: 'VIRTUAL',
     select: false,
   })
@@ -112,13 +109,16 @@ export class SysUser {
   })
   updateTime: Date;
 
+  @VersionColumn({ name: 'version', default: 0, comment: '版本号' })
+  version: number;
+
   @Column({ name: 'remark', length: 500, default: '', comment: '备注' })
   remark: string;
 
   @BeforeInsert()
-  setPublicId() {
-    if (!this.publicId) {
-      this.publicId = randomUUID();
+  setId() {
+    if (!this.id) {
+      this.id = uuidv7();
     }
   }
 
@@ -168,7 +168,7 @@ export class SysUser {
     name: 'sys_user_role', // 生成的中间表的表名
     // referencedColumnName属性用于指定本表的哪个键作为中间表的外键，name属性用于指定中间表中关于本表的外键名
     // 因此referencedColumnName需要填写实体类的属性名，name是实际表中的外键名
-    // 例如指定uuid为外键joinColumns: [{ name: 'user_id', referencedColumnName: 'publicId' }], 
+    // 例如指定uuid为外键joinColumns: [{ name: 'user_id', referencedColumnName: 'id' }], 
     joinColumns: [{ name: 'user_id'}],
     inverseJoinColumns: [{ name: 'role_id' }], // 同上
   })

@@ -5,7 +5,7 @@ import type {
   FrontendDictType as DictType,
 } from "@ruoyi/contracts";
 
-// 通过字典类型直接获取字典数据（不需要 publicId）
+// 通过字典类型直接获取字典数据（不需要 id）
 async function fetchDictDataByType(dictType: string): Promise<DictData[]> {
   const res = await axiosClient.get<{ data: DictData[] }>(
     "/system/dict/data/list",

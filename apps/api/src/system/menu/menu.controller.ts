@@ -49,13 +49,13 @@ export class MenuController {
 
   @RequirePerms('system:menu:query')
   @Get(':id')
-  async findOne(@Param('id') publicId: string) {
+  async findOne(@Param('id') id: string) {
     this.loggingService.log('GET /system/menu/:id', {
-      params: { publicId },
+      params: { id },
     });
-    const data = await this.menuService.get(publicId);
+    const data = await this.menuService.get(id);
     this.loggingService.log('GET /system/menu/:id success', {
-      responseDescriptor: { data: { publicId } },
+      responseDescriptor: { data: { id } },
     });
     return { code: 200, msg: '菜单获取成功', data };
   }
@@ -73,11 +73,11 @@ export class MenuController {
 
   @RequirePerms('system:menu:delete')
   @Delete('delete')
-  async delete(@Query('publicId') publicId: string) {
+  async delete(@Query('id') id: string) {
     this.loggingService.log('DELETE /system/menu/delete', {
-      params: { publicId },
+      params: { id },
     });
-    await this.menuService.delete(publicId);
+    await this.menuService.delete(id);
     this.loggingService.log('DELETE /system/menu/delete success');
     return { code: 200, msg: '菜单删除成功', data: null };
   }

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import {
   nameSchema,
-  publicIdSchema,
+  idSchema,
   sortOrderSchema,
   statusSchema,
 } from "./common";
@@ -12,11 +12,11 @@ export const roleCreateSchema = z.object({
   sortOrder: sortOrderSchema,
   status: statusSchema,
   dataScope: z.string().optional(),
-  menuIds: z.array(publicIdSchema).optional(),
+  menuIds: z.array(idSchema).optional(),
 });
 
 export const roleUpdateSchema = roleCreateSchema.extend({
-  publicId: publicIdSchema,
+  id: idSchema,
 });
 
 export type RoleCreatePayload = z.infer<typeof roleCreateSchema>;

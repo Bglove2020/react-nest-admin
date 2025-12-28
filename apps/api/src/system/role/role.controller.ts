@@ -51,13 +51,13 @@ export class RoleController {
   }
 
   @RequirePerms('system:role:delete')
-  @Delete('delete/:publicId')
-  async delete(@Param('publicId') publicId: string) {
-    this.loggingService.log('DELETE /system/role/delete/:publicId', {
-      params: { publicId },
+  @Delete('delete/:id')
+  async delete(@Param('id') id: string) {
+    this.loggingService.log('DELETE /system/role/delete/:id', {
+      params: { id },
     });
-    await this.roleService.delete(publicId);
-    this.loggingService.log('DELETE /system/role/delete/:publicId success');
+    await this.roleService.delete(id);
+    this.loggingService.log('DELETE /system/role/delete/:id success');
     return { code: 200, msg: '角色删除成功', data: null };
   }
 }

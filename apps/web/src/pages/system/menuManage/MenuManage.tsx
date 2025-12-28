@@ -24,9 +24,9 @@ import {
   DropdownMenuTrigger,
 } from "@ruoyi/ui";
 import FormDialog from "@/pages/system/menuManage/dialog/Form";
-import type { MenuNode } from "@/types/tree";
 import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import { useDictDataByTypeQuery } from "@/lib/dictQueries";
+import type { FrontendMenu } from "@ruoyi/contracts";
 
 // 筛选条件
 type Filters = {
@@ -45,10 +45,12 @@ const extractFilterEntries = (filters: Filters) => {
 };
 
 export default function MenuManage() {
-  const [data, setData] = useState<MenuNode[]>([]);
+  const [data, setData] = useState<FrontendMenu[]>([]);
   const [openFormDialog, setOpenFormDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
-  const [activeMenu, setActiveMenu] = useState<MenuNode | undefined>(undefined);
+  const [activeMenu, setActiveMenu] = useState<FrontendMenu | undefined>(
+    undefined,
+  );
   const [isCreate, setIsCreate] = useState(false);
   const [filters, setFilters] = useState<Filters>({
     name: "",
@@ -56,15 +58,15 @@ export default function MenuManage() {
   });
 
   const loadMenus = useCallback(() => {
-    axiosClient.get<{ data: MenuNode[] }>("/system/menu/list").then((res) => {
-      setData(res.data.data);
-    });
+    axiosClient
+      .get<{ data: FrontendMenu[] }>("/system/menu/list")
+      .then((res) => {
+        setData(res.data.data);
+      });
   }, []);
 
   const deleteMenu = useCallback(async () => {
-    return await axiosClient.delete(
-      `/system/menu/delete?publicId=${activeMenu?.publicId}`,
-    );
+    return await axiosClient.delete(`/system/menu/delete?id=${activeMenu?.id}`);
   }, [activeMenu]);
 
   useEffect(() => {
@@ -73,7 +75,7 @@ export default function MenuManage() {
 
   const statusList = useDictDataByTypeQuery("status").data ?? [];
 
-  const columns: ColumnDef<MenuNode, any>[] = [
+  const columns: ColumnDef<FrontendMenu, any>[] = [
     {
       accessorKey: "sortOrder",
       header: "顺序",
@@ -140,7 +142,7 @@ export default function MenuManage() {
           onCheckedChange={(checked) => {
             axiosClient
               .post("/system/menu/update", {
-                publicId: row.original.publicId,
+                id: row.original.id,
                 status: checked ? "1" : "0",
               })
               .then((res) => {
@@ -265,10 +267,10 @@ export default function MenuManage() {
           data={data}
           columns={columns}
           filterEntries={extractFilterEntries(filters)}
-          getRowId={(r) => r.publicId}
-          getSubRows={(r: MenuNode) => {
+          getRowId={(r) => r.id}
+          getSubRows={(r: FrontendMenu) => {
             return r.children.sort(
-              (a: MenuNode, b: MenuNode) => a.sortOrder - b.sortOrder,
+              (a: FrontendMenu, b: FrontendMenu) => a.sortOrder - b.sortOrder,
             );
           }}
         />

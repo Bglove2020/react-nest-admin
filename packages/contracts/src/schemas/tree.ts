@@ -1,16 +1,16 @@
 import { z } from "zod";
 
 export const treeNodeSchema = z.object({
-  publicId: z.string(),
+  id: z.string(),
   name: z.string(),
   children: z.array(z.any()).optional(),
 });
 
 export interface DeptNode {
-  publicId: string;
+  id: string;
   name: string;
   sortOrder: number;
-  leaderPublicId?: string;
+  leaderId?: string;
   leaderName?: string;
   leaderEmail?: string;
   status: string;
@@ -19,10 +19,10 @@ export interface DeptNode {
 
 export const deptNodeSchema: z.ZodType<DeptNode> = z.lazy(() =>
   z.object({
-    publicId: z.string(),
+    id: z.string(),
     name: z.string(),
     sortOrder: z.number(),
-    leaderPublicId: z.string().optional(),
+    leaderId: z.string().optional(),
     leaderName: z.string().optional(),
     leaderEmail: z.string().optional(),
     status: z.string(),
@@ -31,7 +31,7 @@ export const deptNodeSchema: z.ZodType<DeptNode> = z.lazy(() =>
 );
 
 export interface MenuNode {
-  publicId: string;
+  id: string;
   name: string;
   sortOrder: number;
   path?: string;
@@ -45,7 +45,7 @@ export interface MenuNode {
 
 export const menuNodeSchema: z.ZodType<MenuNode> = z.lazy(() =>
   z.object({
-    publicId: z.string(),
+    id: z.string(),
     name: z.string(),
     sortOrder: z.number(),
     path: z.string().optional(),

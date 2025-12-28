@@ -3,10 +3,10 @@ import { SysDept } from "../entities/dept.entity";
 
 export function toFrontendDeptDto(dept: SysDept): FrontendDept {
     return {
-        publicId: dept.publicId,
+        id: dept.id,
         name: dept.name,
         sortOrder: dept.sortOrder,
-        leaderPublicId: dept.leader?.publicId,
+        leaderId: dept.leader?.id,
         leaderName: dept.leader?.name,
         leaderEmail: dept.leader?.email,
         status: dept.status,

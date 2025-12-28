@@ -91,7 +91,7 @@ export function LoginForm() {
           {/* 将 onSubmit 绑定到 form 元素 */}
           <FieldGroup>
             <Field
-              className="!gap-2"
+              className="gap-2!"
               data-invalid={errors.account?.message ? "true" : "false"}
             >
               <FieldLabel htmlFor="account">账号</FieldLabel>
@@ -111,7 +111,7 @@ export function LoginForm() {
             </Field>
 
             <Field
-              className="!gap-2"
+              className="gap-2!"
               data-invalid={errors.password?.message ? "true" : "false"}
             >
               <FieldLabel htmlFor="password">密码</FieldLabel>

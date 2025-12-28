@@ -86,9 +86,7 @@ export default function FormDialog({
     try {
       console.log("onSubmit data:", data);
       const url = isCreate ? "/system/menu/create" : "/system/menu/update";
-      const payload = isCreate
-        ? data
-        : { ...data, publicId: activeData?.publicId };
+      const payload = isCreate ? data : { ...data, id: activeData?.id };
 
       const res = await axiosClient.post(url, payload);
       if (res.data.code === 200) {
@@ -115,7 +113,7 @@ export default function FormDialog({
             onSubmit={handleSubmit(onSubmit)}
             className="max-h-[65vh] overflow-y-auto py-4 pr-2"
           >
-            <FieldGroup className="!gap-6">
+            <FieldGroup className="gap-6!">
               {/* 类型选择器 */}
               {isCreate && (
                 <Field orientation="grid">

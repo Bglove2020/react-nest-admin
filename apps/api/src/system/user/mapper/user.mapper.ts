@@ -3,16 +3,16 @@ import type { FrontendUser } from '@ruoyi/contracts';
 
 export function toFrontendDto(user: SysUser): FrontendUser {
   return {
-    publicId: user.publicId,
+    id: user.id,
     account: user.account,
     name: user.name,
     email: user.email,
     sex: user.sex,
     avatar: user.avatar,
     status: user.status,
-    deptPublicId: user.dept.publicId,
+    deptId: user.dept.id,
     deptName: user.dept.name,
-    rolePublicIds: user.roles.map((role) => role.publicId),
+    roleIds: user.roles.map((role) => role.id),
   };
 }
 
