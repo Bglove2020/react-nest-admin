@@ -11,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@ruoyi/ui";
-import { type SideBarItem, type UserInfo } from "@/lib/authQueries";
+import type { SideBarItem, UserInfo } from "@ruoyi/contracts";
 
 export function AppSidebar({
   sideBarData,

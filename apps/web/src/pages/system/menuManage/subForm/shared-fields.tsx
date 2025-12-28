@@ -40,6 +40,8 @@ function RadioField({
     formState: { errors },
   } = useFormContext<TFormSchema>();
 
+  const error = (errors as any)[name];
+
   return (
     <Field orientation="grid">
       <FieldLabel>{label}</FieldLabel>
@@ -69,8 +71,8 @@ function RadioField({
           </RadioGroup>
         )}
       />
-      {errors[name] && (
-        <FieldError errors={[errors[name]]} className="col-start-2" />
+      {error && (
+        <FieldError errors={[error]} className="col-start-2" />
       )}
     </Field>
   );
@@ -118,6 +120,7 @@ function InputField({
   } = useFormContext<TFormSchema>();
 
   const registerOptions = type === "number" ? { valueAsNumber: true } : {};
+  const error = (errors as any)[name];
 
   return (
     <Field orientation="grid">
@@ -128,8 +131,8 @@ function InputField({
         placeholder={placeholder}
         {...register(name, registerOptions)}
       />
-      {errors[name] && (
-        <FieldError errors={[errors[name]]} className="col-start-2" />
+      {error && (
+        <FieldError errors={[error]} className="col-start-2" />
       )}
     </Field>
   );
@@ -188,6 +191,8 @@ export function ParentSelectField({
     formState: { errors },
   } = useFormContext<TFormSchema>();
 
+  const error = (errors as any).parentId;
+
   return (
     <Field orientation="grid">
       <FieldLabel htmlFor="parentId">父菜单</FieldLabel>
@@ -205,8 +210,8 @@ export function ParentSelectField({
           />
         )}
       />
-      {errors.parentId && (
-        <FieldError errors={[errors.parentId]} className="col-start-2" />
+      {error && (
+        <FieldError errors={[error]} className="col-start-2" />
       )}
     </Field>
   );

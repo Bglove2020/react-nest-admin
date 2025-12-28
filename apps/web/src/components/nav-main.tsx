@@ -17,12 +17,12 @@ import {
   SidebarMenuSubItem,
   useSidebar,
 } from "@ruoyi/ui";
-import type { SideBarItem } from "@/lib/authQueries";
+import type { SideBarItem } from "@ruoyi/contracts";
 
 export function NavMain({ items }: { items: SideBarItem[] }) {
   const { pathname } = useLocation();
   const { isMobile, setOpenMobile } = useSidebar();
-  const isMatch = (url: string) => Boolean(url && pathname.includes(url));
+  const isMatch = (url: string | null | undefined) => Boolean(url && pathname.includes(url));
 
   const handleLinkClick = () => {
     if (isMobile) {
@@ -35,7 +35,7 @@ export function NavMain({ items }: { items: SideBarItem[] }) {
         {items.map((item) => {
           const groupActive =
             isMatch(item.url) ||
-            (item.children?.some((s) => isMatch(s.url)) ?? false);
+            (item.children?.some((s: SideBarItem) => isMatch(s.url)) ?? false);
           return (
             <Collapsible
               key={item.title + pathname}
@@ -65,7 +65,7 @@ export function NavMain({ items }: { items: SideBarItem[] }) {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub className="pt-2 gap-2">
-                        {item.children?.map((subItem) => (
+                        {item.children?.map((subItem: SideBarItem) => (
                           <SidebarMenuSubItem key={subItem.title}>
                             <SidebarMenuSubButton
                               asChild
@@ -74,8 +74,8 @@ export function NavMain({ items }: { items: SideBarItem[] }) {
                               <Link
                                 to={
                                   subItem.frame
-                                    ? subItem.url
-                                    : "/" + subItem.url
+                                    ? (subItem.url ?? "#")
+                                    : "/" + (subItem.url ?? "")
                                 }
                                 className="gap-4"
                                 onClick={handleLinkClick}
@@ -96,7 +96,11 @@ export function NavMain({ items }: { items: SideBarItem[] }) {
                     isActive={isMatch(item.url)}
                   >
                     <Link
-                      to={item.frame ? item.url : "/" + item.url}
+                      to={
+                        item.frame
+                          ? (item.url ?? "#")
+                          : "/" + (item.url ?? "")
+                      }
                       className="gap-4"
                       onClick={handleLinkClick}
                     >
