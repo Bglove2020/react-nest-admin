@@ -8,9 +8,14 @@ export const dictTypeCreateSchema = z.object({
   sortOrder: sortOrderSchema,
 });
 
-export const dictTypeUpdateSchema = dictTypeCreateSchema.extend({
-  id: idSchema,
-});
+export const dictTypeUpdateSchema = dictTypeCreateSchema
+  .extend({
+    id: idSchema,
+  })
+  .partial()
+  .extend({
+    id: idSchema,
+  });
 
 export const dictDataCreateSchema = z.object({
   type: z.string().min(1, "请输入字典类型"),
@@ -20,9 +25,14 @@ export const dictDataCreateSchema = z.object({
   status: statusSchema,
 });
 
-export const dictDataUpdateSchema = dictDataCreateSchema.extend({
-  id: idSchema,
-});
+export const dictDataUpdateSchema = dictDataCreateSchema
+  .extend({
+    id: idSchema,
+  })
+  .partial()
+  .extend({
+    id: idSchema,
+  });
 
 export type DictTypeCreatePayload = z.infer<typeof dictTypeCreateSchema>;
 export type DictTypeUpdatePayload = z.infer<typeof dictTypeUpdateSchema>;

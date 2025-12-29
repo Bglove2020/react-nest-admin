@@ -17,10 +17,11 @@ export const deptCreateSchema = z.object({
 
 export const deptUpdateSchema = z.object({
   id: idSchema,
-  name: nameSchema,
-  sortOrder: sortOrderSchema,
-  leaderId: optionalIdSchema,
-  status: statusSchema,
+  name: nameSchema.optional(),
+  parentId: optionalIdSchema.optional(),
+  sortOrder: sortOrderSchema.optional(),
+  leaderId: optionalIdSchema.optional(),
+  status: statusSchema.optional(),
 });
 
 export type DeptCreatePayload = z.infer<typeof deptCreateSchema>;

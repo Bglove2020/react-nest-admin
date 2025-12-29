@@ -8,6 +8,7 @@ import { UpdateDictTypeDto } from './dto/update-dict-type.dto';
 import { CreateDictDataDto } from './dto/create-dict-data.dto';
 import { UpdateDictDataDto } from './dto/update-dict-data.dto';
 import { RedisService } from '@/common/redis/redis.service';
+import { removeUndefined } from '@/common/utils/remove-undefined.util';
 
 const DICT_DATA_CACHE_KEY_PREFIX = 'dict:data:';
 
@@ -109,11 +110,13 @@ export class DictService {
     const oldType = dict.type;
 
     try {
-      await this.dictRepository.save({ ...dict, ...dto });
-      if (oldType !== dto.type) {
+      await this.dictRepository.save({ ...dict, ...removeUndefined(dto) });
+      if (oldType !== dto.type && dto.type) {
         await this.redisService.del(`${DICT_DATA_CACHE_KEY_PREFIX}${oldType}`);
       }
-      await this.redisService.del(`${DICT_DATA_CACHE_KEY_PREFIX}${dto.type}`);
+      if (dto.type) {
+        await this.redisService.del(`${DICT_DATA_CACHE_KEY_PREFIX}${dto.type}`);
+      }
     } catch (e: any) {
       if (e instanceof OptimisticLockVersionMismatchError) {
         throw new BadRequestException({
@@ -188,7 +191,10 @@ export class DictService {
     }
 
     try {
-      await this.dictDataRepository.save({ ...dictData, ...dto });
+      await this.dictDataRepository.save({
+        ...dictData,
+        ...removeUndefined(dto),
+      });
       if (dictData.dict) {
         await this.redisService.del(
           `${DICT_DATA_CACHE_KEY_PREFIX}${dictData.dict.type}`,

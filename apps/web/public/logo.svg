@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <style>
+    path {
+      /* 对应 index.css 中的 --primary: oklch(0.6 0.1 185) */
+      stroke: oklch(0.6 0.1 185);
+    }
+    @media (prefers-color-scheme: dark) {
+      path {
+        /* 对应 index.css 中的 .dark --primary: oklch(0.7 0.12 183) */
+        stroke: oklch(0.7 0.12 183);
+      }
+    }
+  </style>
+  <g
+    fill="none"
+    stroke-width="10"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M 15,55 C 15,75 35,90 60,85 C 75,82 85,70 80,55" />
+    <path d="M 45,60 C 35,40 45,15 65,20 C 80,25 75,45 60,50" />
+  </g>
+</svg>

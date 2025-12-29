@@ -7,6 +7,7 @@ import { SysRole } from './entities/role.entity';
 import { SysMenu } from '../menu/entities/menu.entity';
 import { SysUser } from '../user/entities/user.entity';
 import { RedisService } from '@/common/redis/redis.service';
+import { removeUndefined } from '@/common/utils/remove-undefined.util';
 
 @Injectable()
 export class RoleService {
@@ -107,7 +108,7 @@ export class RoleService {
     }
     const { menuIds, ...rest } = updateRoleDto;
 
-    Object.assign(role, rest);
+    Object.assign(role, removeUndefined(rest));
 
     if (menuIds) {
       let menus: SysMenu[] = [];

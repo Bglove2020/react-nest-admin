@@ -23,6 +23,8 @@ import { SysRole } from '../role/entities/role.entity';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '@/common/redis/redis.service';
 
+import { removeUndefined } from '@/common/utils/remove-undefined.util';
+
 @Injectable()
 export class UserService {
   private readonly AUTH_USER_CACHE_PREFIX = 'user-info-roles-permissions:';
@@ -266,7 +268,7 @@ export class UserService {
     }
 
     const { deptId, roleIds, ...rest } = updateUserDto;
-    Object.assign(user, rest);
+    Object.assign(user, removeUndefined(rest));
 
     // 如果有deptId，且与当前院系不同，则更新院系
     if (updateUserDto.deptId && updateUserDto.deptId !== user.dept?.id) {

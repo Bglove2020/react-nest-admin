@@ -65,13 +65,19 @@ export const menuFormSchema = z.discriminatedUnion("menuType", [
 
 export const menuCreateSchema = menuFormSchema;
 
-export const menuUpdateSchema = z.discriminatedUnion("menuType", [
-  menuCatalogBaseSchema.extend({ id: idSchema }).refine(refineCatalogPath, {
-    message: "\u5916\u94fe\u5fc5\u987b\u586b\u5199\u8def\u5f84",
-    path: ["path"],
+export const menuUpdateSchema = z.union([
+  z.discriminatedUnion("menuType", [
+    menuCatalogBaseSchema.extend({ id: idSchema }).refine(refineCatalogPath, {
+      message: "\u5916\u94fe\u5fc5\u987b\u586b\u5199\u8def\u5f84",
+      path: ["path"],
+    }),
+    menuItemBaseSchema.extend({ id: idSchema }),
+    menuButtonBaseSchema.extend({ id: idSchema }),
+  ]),
+  z.object({
+    id: idSchema,
+    status: statusSchema,
   }),
-  menuItemBaseSchema.extend({ id: idSchema }),
-  menuButtonBaseSchema.extend({ id: idSchema }),
 ]);
 
 export type MenuFormPayload = z.infer<typeof menuFormSchema>;

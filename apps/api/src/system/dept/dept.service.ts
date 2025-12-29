@@ -11,6 +11,7 @@ import { SysUser } from '../user/entities/user.entity';
 import { RedisService } from '@/common/redis/redis.service';
 import { AlsService } from '@/common/als/als.service';
 import { Transactional } from 'typeorm-transactional';
+import { removeUndefined } from '@/common/utils/remove-undefined.util';
 
 @Injectable()
 export class DeptService {
@@ -107,7 +108,7 @@ export class DeptService {
       throw new BadRequestException({ msg: '不允许更新父部门', code: 400 });
     }
     const { leaderId, ...rest } = updateDeptDto;
-    Object.assign(dept, rest);
+    Object.assign(dept, removeUndefined(rest));
 
     // 如果有负责人字段，根据leaderId查询负责人
     if (leaderId && leaderId !== dept.leader?.id) {

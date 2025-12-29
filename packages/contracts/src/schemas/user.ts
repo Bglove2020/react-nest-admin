@@ -17,7 +17,8 @@ export const userCreateSchema = z.object({
   sex: sexSchema,
   deptId: idSchema.optional(),
   roleIds: z.array(idSchema).optional(),
-  status: statusSchema,
+  status: statusSchema.optional(),
+  avatar: z.string().optional(),
 });
 
 export const userCreateFormSchema = userCreateSchema
@@ -34,11 +35,12 @@ export const userCreateFormSchema = userCreateSchema
 
 export const userUpdateSchema = z.object({
   id: idSchema,
-  name: nameSchema,
-  sex: sexSchema,
-  status: statusSchema,
-  deptId: idSchema,
-  roleIds: z.array(idSchema).min(1, "请至少选择一个角色"),
+  name: nameSchema.optional(),
+  sex: sexSchema.optional(),
+  status: statusSchema.optional(),
+  deptId: idSchema.optional(),
+  roleIds: z.array(idSchema).optional(),
+  avatar: z.string().optional(),
 });
 
 export const userResetPasswordSchema = z.object({

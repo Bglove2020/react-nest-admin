@@ -10,6 +10,7 @@ import { toFrontendDto } from './mapper/to-fronted_menu';
 import { AlsService } from '@/common/als/als.service';
 import { RedisService } from '@/common/redis/redis.service';
 import { Transactional } from 'typeorm-transactional';
+import { removeUndefined } from '@/common/utils/remove-undefined.util';
 
 @Injectable()
 export class MenuService {
@@ -95,7 +96,7 @@ export class MenuService {
       throw new BadRequestException({ msg: '菜单不存在', code: 400 });
     }
 
-    Object.assign(menu, updateMenuDto);
+    Object.assign(menu, removeUndefined(updateMenuDto));
 
     try {
       await this.menuRepository.save(menu);

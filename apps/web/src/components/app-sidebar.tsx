@@ -50,10 +50,8 @@ export function AppSidebar({
                   </svg>
                 </div>
                 <div className="grid flex-1 gap-0.5 text-left text-sm leading-tight">
-                  <span className="truncate font-medium">
-                    ruoyi-react-nestjs
-                  </span>
-                  <span className="truncate text-xs">类若依的管理系统</span>
+                  <span className="truncate font-medium">react-nest-admin</span>
+                  <span className="truncate text-xs">TS全栈后台管理系统</span>
                 </div>
               </a>
             </SidebarMenuButton>
