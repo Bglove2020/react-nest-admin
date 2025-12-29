@@ -1,51 +1,51 @@
-  services:
-    mysql:
-      image: mysql:8.0
-      environment:
-        MYSQL_ROOT_PASSWORD: ruoyi123
-        MYSQL_DATABASE: simplified_ruoyi
-      volumes:
-        - mysql_data:/var/lib/mysql
-      ports:
-        - "3306:3306"
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+    volumes:
+      - mysql_data:/var/lib/mysql
 
-    redis:
-      image: redis:7-alpine
-      # ports:
-      #   - "6379:6379"
+  redis:
+    image: redis:7-alpine
+    # 不需要对外暴露端口
 
-    api:
-      build:
-        context: .
-        dockerfile: apps/api/Dockerfile
-      environment:
-        NODE_ENV: production
-        PORT: 3000
-        mysql_host: mysql
-        mysql_port: 3306
-        mysql_username: root
-        mysql_password: ${MYSQL_ROOT_PASSWORD}
-        mysql_database: ${MYSQL_DATABASE}
-        REDIS_HOST: redis
-        REDIS_PORT: 6379
-        JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
-        JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
-      depends_on:
-        - mysql
-        - redis
-      ports:
-        - "3000:3000"
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    environment:
+      NODE_ENV: production
+      PORT: 3000
 
-    web:
-      build:
-        context: .
-        dockerfile: apps/web/Dockerfile
-        args:
-          VITE_API_BASE_URL: /api
-      depends_on:
-        - api
-      ports:
-        - "8080:80"
+      mysql_host: mysql
+      mysql_port: 3306
+      mysql_username: root
+      mysql_password: ${MYSQL_ROOT_PASSWORD}
+      mysql_database: ${MYSQL_DATABASE}
 
-  volumes:
-    mysql_data:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET}
+    depends_on:
+      - mysql
+      - redis
+    ports:
+      - "127.0.0.1:3200:3000" # ✅ 不占宿主机 3000，且不对公网开放
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      args:
+        VITE_API_BASE_URL: /api
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:3100:80" # ✅ 只给宿主机 Nginx 转发用
+
+volumes:
+  mysql_data:
