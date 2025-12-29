@@ -40,6 +40,12 @@ export class DatabaseSeedService {
   async seed(): Promise<void> {
     this.loggingService.log('开始初始化数据库种子数据...');
     try {
+      const userCount = await this.userRepository.count();
+      if (userCount > 0) {
+        this.loggingService.log('Seed data already exists, skip.');
+        return;
+      }
+
       // // 检查是否已有数据，如果已有数据则跳过
       // const userCount = await this.userRepository.count();
       // if (userCount > 0) {
