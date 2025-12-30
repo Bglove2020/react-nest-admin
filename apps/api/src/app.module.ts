@@ -1,5 +1,5 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE } from '@nestjs/core';
 import { APP_FILTER } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RbacGuard } from './auth/guards/rbac.guard';
@@ -10,6 +10,8 @@ import { addTransactionalDataSource } from 'typeorm-transactional';
 import databaseConfig from './config/database.config';
 import loggingConfig from './config/logging.config';
 import redisConfig from './config/redis.config';
+import appConfig from './config/app.config';
+import { validate } from './config/env-validation.schema';
 import { AuthModule } from '@/auth/auth.module';
 import { RedisModule } from '@nestjs-modules/ioredis';
 import { CommonRedisModule } from './common/redis/redis.module';
@@ -17,6 +19,8 @@ import { AlsModule } from './common/als/als.module';
 import { LoggingModule } from './common/logging/logging.module';
 import { LoggingService } from './common/logging/logging.service';
 import { RequestContextMiddleware } from './common/middleware/request-context.middleware';
+import cookieParser from 'cookie-parser';
+import { ZodValidationPipe } from 'nestjs-zod';
 // import { SqlExceptionFilter } from './common/filters/sql-exception.filter';
 import { DeptModule } from './system/dept/dept.module';
 import { MenuModule } from './system/menu/menu.module';
@@ -37,7 +41,9 @@ import { SysDictData } from './system/dict/entities/dict-data.entity';
     ConfigModule.forRoot({
       // 这里根据 NODE_ENV 加载不同的环境变量文件，再默认加载 .env。如果不同文件中有同名变量，会保留优先加载的文件中的值，不会被后面的文件覆盖。
       envFilePath: [`.env.${process.env.NODE_ENV}`, '.env'],
-      load: [databaseConfig, loggingConfig, redisConfig],
+      load: [databaseConfig, loggingConfig, redisConfig, appConfig],
+      // 启用环境变量验证
+      validate: validate,
       isGlobal: true,
     }),
     RedisModule.forRootAsync({
@@ -127,6 +133,7 @@ import { SysDictData } from './system/dict/entities/dict-data.entity';
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RbacGuard },
+    { provide: APP_PIPE, useClass: ZodValidationPipe },
     RequestContextMiddleware,
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     DatabaseSeedService,
@@ -134,6 +141,6 @@ import { SysDictData } from './system/dict/entities/dict-data.entity';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(RequestContextMiddleware).forRoutes('*');
+    consumer.apply(RequestContextMiddleware, cookieParser()).forRoutes('*');
   }
 }
