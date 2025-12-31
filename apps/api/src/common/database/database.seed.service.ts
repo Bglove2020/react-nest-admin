@@ -9,7 +9,6 @@ import { SysDict } from '@/system/dict/entities/dict.entity';
 import { SysDictData } from '@/system/dict/entities/dict-data.entity';
 import * as bcrypt from 'bcryptjs';
 import { LoggingService } from '../logging/logging.service';
-import { updateEnvFile } from '../utils/env-file.util';
 
 /**
  * 数据库种子服务
@@ -68,9 +67,6 @@ export class DatabaseSeedService {
       // 5. 创建用户（管理员账户）
       await this.createUser(dept, adminRole);
       this.loggingService.log('用户数据初始化完成');
-
-      // 6. 将默认部门和角色的 ID 写入环境变量
-      await this.writeIdsToEnvFile(dept, adminRole, userRole);
 
       this.loggingService.log('数据库种子数据初始化完成！');
     } catch (error) {
@@ -461,28 +457,5 @@ export class DatabaseSeedService {
     });
 
     await this.userRepository.save(user);
-  }
-
-  /**
-   * 将默认部门和角色的 ID 写入环境变量文件
-   */
-  private async writeIdsToEnvFile(
-    dept: SysDept,
-    adminRole: SysRole,
-    userRole: SysRole,
-  ): Promise<void> {
-    try {
-      updateEnvFile([
-        { key: 'DEFAULT_DEPT_ID', value: dept.id },
-        { key: 'DEFAULT_ROLE_ID', value: adminRole.id },
-        { key: 'DEFAULT_USER_ROLE_ID', value: userRole.id },
-      ]);
-      this.loggingService.log(
-        `已将默认部门 ID (${dept.id})、管理员角色 ID (${adminRole.id}) 和普通用户角色 ID (${userRole.id}) 写入环境变量文件`,
-      );
-    } catch (error) {
-      this.loggingService.error('写入环境变量文件失败:', error);
-      // 不抛出错误，避免影响 seed 流程
-    }
   }
 }

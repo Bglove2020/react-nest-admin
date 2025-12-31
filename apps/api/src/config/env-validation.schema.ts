@@ -136,17 +136,6 @@ export const envValidationSchema = z
     CORS_ALLOWED_ORIGINS: z
       .string({ message: '环境变量：CORS_ALLOWED_ORIGINS需要是字符串类型' })
       .default('http://localhost:5173,http://127.0.0.1:5173'),
-
-    // === 默认值配置（由 seed 自动生成） ===
-    DEFAULT_DEPT_ID: z
-      .string({ message: '环境变量：DEFAULT_DEPT_ID需要是字符串类型' })
-      .optional(),
-    DEFAULT_ROLE_ID: z
-      .string({ message: '环境变量：DEFAULT_ROLE_ID需要是字符串类型' })
-      .optional(),
-    DEFAULT_USER_ROLE_ID: z
-      .string({ message: '环境变量：DEFAULT_USER_ROLE_ID需要是字符串类型' })
-      .optional(),
   })
   .superRefine((data, ctx) => {
     // 额外的交叉验证

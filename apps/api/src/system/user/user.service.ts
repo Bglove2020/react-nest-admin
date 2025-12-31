@@ -119,23 +119,14 @@ export class UserService {
         throw new BadRequestException({ msg: '部分角色不存在', code: 400 });
       }
     } else {
-      // 使用环境变量配置的默认普通用户角色
-      const defaultUserRoleId = this.configService.get<string>(
-        'DEFAULT_USER_ROLE_ID',
-      );
-      if (!defaultUserRoleId) {
-        throw new BadRequestException({
-          msg: '默认用户角色未配置，请先运行 seed 或配置 DEFAULT_USER_ROLE_ID 环境变量',
-          code: 400,
-        });
-      }
+      // 使用默认普通用户角色（通过 roleKey 查询）
       try {
         const defaultRole = await this.roleRepository.findOne({
-          where: { id: defaultUserRoleId },
+          where: { roleKey: 'user' },
         });
         if (!defaultRole) {
           throw new BadRequestException({
-            msg: '默认用户角色不存在，请检查 DEFAULT_USER_ROLE_ID 配置',
+            msg: '默认用户角色不存在，请先运行数据库初始化',
             code: 400,
           });
         }
