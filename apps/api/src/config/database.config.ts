@@ -2,7 +2,6 @@ import { registerAs } from '@nestjs/config';
 
 // 自定义配置文件
 export default registerAs('database', () => {
-    console.log(process.env.mysql_host);
     return {
         // 类型固定为mysql
         type: 'mysql',

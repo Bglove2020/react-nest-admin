@@ -85,10 +85,8 @@ export class JwtAuthGuard implements CanActivate {
       permissions: string[];
     }>(`user-info-roles-permissions:${payload.sub}`);
     if (cachedUser) {
-      console.log('查询到用户角色和权限缓存数据', cachedUser);
       return cachedUser;
     }
-    console.log('未查询到用户角色和权限缓存数据');
 
     const user = await this.userRepository.findOne({
       where: { id: payload.sub },
@@ -99,7 +97,6 @@ export class JwtAuthGuard implements CanActivate {
       },
     });
 
-    console.log('jwt auth guard user', user);
     if (!user) {
       throw new UnauthorizedException('用户不存在或已被删除');
     }
@@ -134,7 +131,6 @@ export class JwtAuthGuard implements CanActivate {
     }
 
     const result = { ...user, roleKeys, permissions };
-    console.log('jwt auth guard result', result);
     await this.redisService.set(
       `user-info-roles-permissions:${payload.sub}`,
       result,

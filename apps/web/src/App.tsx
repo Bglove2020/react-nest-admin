@@ -72,6 +72,14 @@ function App() {
     () => mapRouters(routersQuery.data ?? []),
     [routersQuery.data],
   );
+
+  // 根据用户是否有菜单权限决定默认首页
+  const defaultHomePage = useMemo(() => {
+    // 如果有动态路由（菜单权限），跳转到 dashboard
+    // 否则跳转到个人简介页面
+    return dynamicRoutes.length > 0 ? "/dashboard" : "/profile";
+  }, [dynamicRoutes]);
+
   const isLoading = infoQuery.isFetching || routersQuery.isFetching;
 
   const element = useRoutes([
@@ -97,7 +105,7 @@ function App() {
         </RequireAuth>
       ),
       children: [
-        { index: true, element: <Navigate to="/dashboard" replace /> },
+        { index: true, element: <Navigate to={defaultHomePage} replace /> },
         { path: "profile", element: <Profile /> },
         ...dynamicRoutes,
       ],
@@ -107,7 +115,7 @@ function App() {
       element: isLoading ? (
         <DialogLoading title="页面加载中..." />
       ) : (
-        <Navigate to={token ? "/dashboard" : "/auth/login"} replace />
+        <Navigate to={token ? defaultHomePage : "/auth/login"} replace />
       ),
     },
   ]);

@@ -46,36 +46,31 @@ export class DatabaseSeedService {
         return;
       }
 
-      // // 检查是否已有数据，如果已有数据则跳过
-      // const userCount = await this.userRepository.count();
-      // if (userCount > 0) {
-      //   this.loggingService.log('数据库已有数据，跳过种子数据初始化');
-
-      //   return;
-      // }
-
       // 1. 创建部门
       const dept = await this.createDept();
       this.loggingService.log('部门数据初始化完成');
 
-      // 2. 创建角色
-      const role = await this.createRole();
-      this.loggingService.log('角色数据初始化完成');
+      // 2. 创建角色（管理员和普通用户）
+      const adminRole = await this.createRole();
+      this.loggingService.log('管理员角色数据初始化完成');
 
-      // 3. 创建菜单
-      await this.createMenus(role);
+      const userRole = await this.createUserRole();
+      this.loggingService.log('普通用户角色数据初始化完成');
+
+      // 3. 创建菜单（仅关联管理员角色）
+      await this.createMenus(adminRole);
       this.loggingService.log('菜单数据初始化完成');
 
       // 4. 创建字典
       await this.createDicts();
       this.loggingService.log('字典数据初始化完成');
 
-      // 5. 创建用户
-      await this.createUser(dept, role);
+      // 5. 创建用户（管理员账户）
+      await this.createUser(dept, adminRole);
       this.loggingService.log('用户数据初始化完成');
 
       // 6. 将默认部门和角色的 ID 写入环境变量
-      await this.writeIdsToEnvFile(dept, role);
+      await this.writeIdsToEnvFile(dept, adminRole, userRole);
 
       this.loggingService.log('数据库种子数据初始化完成！');
     } catch (error) {
@@ -112,6 +107,25 @@ export class DatabaseSeedService {
       createBy: 'auto_seed',
       updateBy: 'auto_seed',
       remark: '超级管理员角色',
+    });
+
+    return await this.roleRepository.save(role);
+  }
+
+  /**
+   * 创建普通用户角色
+   * 该角色没有任何菜单权限，用于新注册用户的默认角色
+   */
+  private async createUserRole(): Promise<SysRole> {
+    const role = this.roleRepository.create({
+      name: '普通用户',
+      roleKey: 'user',
+      sortOrder: 1,
+      dataScope: '5', // 仅本人数据权限
+      status: '1',
+      createBy: 'auto_seed',
+      updateBy: 'auto_seed',
+      remark: '普通用户角色，无菜单权限，仅可访问个人中心',
     });
 
     return await this.roleRepository.save(role);
@@ -452,14 +466,19 @@ export class DatabaseSeedService {
   /**
    * 将默认部门和角色的 ID 写入环境变量文件
    */
-  private async writeIdsToEnvFile(dept: SysDept, role: SysRole): Promise<void> {
+  private async writeIdsToEnvFile(
+    dept: SysDept,
+    adminRole: SysRole,
+    userRole: SysRole,
+  ): Promise<void> {
     try {
       updateEnvFile([
         { key: 'DEFAULT_DEPT_ID', value: dept.id },
-        { key: 'DEFAULT_ROLE_ID', value: role.id },
+        { key: 'DEFAULT_ROLE_ID', value: adminRole.id },
+        { key: 'DEFAULT_USER_ROLE_ID', value: userRole.id },
       ]);
       this.loggingService.log(
-        `已将默认部门 ID (${dept.id}) 和默认角色 ID (${role.id}) 写入环境变量文件`,
+        `已将默认部门 ID (${dept.id})、管理员角色 ID (${adminRole.id}) 和普通用户角色 ID (${userRole.id}) 写入环境变量文件`,
       );
     } catch (error) {
       this.loggingService.error('写入环境变量文件失败:', error);

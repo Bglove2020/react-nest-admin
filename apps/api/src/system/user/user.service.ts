@@ -93,9 +93,11 @@ export class UserService {
           where: { id: createUserDto.deptId },
         });
       } else {
-        dept = await this.deptRepository.findOne({
+        const depts = await this.deptRepository.find({
           order: { id: 'ASC' },
+          take: 1,
         });
+        dept = depts.length > 0 ? depts[0] : null;
       }
       if (!dept) {
         throw new BadRequestException({ msg: '部门不存在', code: 400 });
@@ -117,13 +119,23 @@ export class UserService {
         throw new BadRequestException({ msg: '部分角色不存在', code: 400 });
       }
     } else {
+      // 使用环境变量配置的默认普通用户角色
+      const defaultUserRoleId = this.configService.get<string>(
+        'DEFAULT_USER_ROLE_ID',
+      );
+      if (!defaultUserRoleId) {
+        throw new BadRequestException({
+          msg: '默认用户角色未配置，请先运行 seed 或配置 DEFAULT_USER_ROLE_ID 环境变量',
+          code: 400,
+        });
+      }
       try {
         const defaultRole = await this.roleRepository.findOne({
-          where: { roleKey: 'admin' },
+          where: { id: defaultUserRoleId },
         });
         if (!defaultRole) {
           throw new BadRequestException({
-            msg: '默认角色不存在',
+            msg: '默认用户角色不存在，请检查 DEFAULT_USER_ROLE_ID 配置',
             code: 400,
           });
         }
@@ -156,32 +168,6 @@ export class UserService {
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库保存错误', code: 400 });
     }
-
-    // const user = this.userRepository.create({
-    //   account: createUserDto.account,
-    //   name: createUserDto.name,
-    //   email: createUserDto.email,
-    //   sex: createUserDto.sex,
-    //   password: await bcrypt.hash(createUserDto.password, 10),
-    //   dept: {
-    //     id: createUserDto.deptId
-    //       ? createUserDto.deptId
-    //       : this.configService.get<string>('DEFAULT_DEPT_ID'),
-    //   },
-    //   roles:
-    //     createUserDto.roleIds?.length > 0
-    //       ? createUserDto.roleIds.map((id) => ({ id }))
-    //       : [{ id: this.configService.get<string>('DEFAULT_ROLE_ID') }],
-    //   avatar: createUserDto.avatar ?? '',
-    //   status: createUserDto.status ?? '1',
-    //   createBy: 'system',
-    //   updateBy: 'system',
-    // });
-    // try {
-    //   await this.userRepository.save(user);
-    // } catch (e: any) {
-    //   throw new BadRequestException({ msg: '数据库保存错误', code: 400 });
-    // }
   }
 
   async resetPassword(resetPasswordDto: ResetUserPasswordDto) {
@@ -248,7 +234,6 @@ export class UserService {
 
   async update(updateUserDto: UpdateUserDto) {
     // 检查用户是否存在
-    console.log('updateUserDto.id', updateUserDto.id);
     let user: SysUser | null = null;
     try {
       user = await this.userRepository.findOne({
@@ -258,7 +243,6 @@ export class UserService {
           roles: true,
         },
       });
-      console.log('user', user);
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
     }
@@ -294,14 +278,12 @@ export class UserService {
         if (roles.length !== updateUserDto.roleIds.length) {
           throw new BadRequestException({ msg: '部分角色不存在', code: 400 });
         }
-        console.log('updateUserDto.roleIds:', updateUserDto.roleIds);
-        console.log('roles:', roles);
         user.roles = roles;
       } catch (e: any) {
         throw new BadRequestException({ msg: '数据库更新错误', code: 400 });
       }
     }
-    console.log('user:', user);
+
     try {
       await this.userRepository.save(user);
       // 用户信息或角色变更，清理相关鉴权和菜单缓存
