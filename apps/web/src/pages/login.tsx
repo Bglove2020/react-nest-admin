@@ -98,7 +98,7 @@ export function LoginForm() {
               <Input
                 id="account"
                 type="text"
-                placeholder="请输入账号"
+                placeholder="请输入账号：admin"
                 aria-invalid={errors.account?.message ? "true" : "false"}
                 {...register("account")}
               />
@@ -118,7 +118,7 @@ export function LoginForm() {
               <Input
                 id="password"
                 type="password"
-                placeholder="请输入密码"
+                placeholder="请输入密码：admin123."
                 aria-invalid={errors.password?.message ? "true" : "false"}
                 {...register("password")}
               />
