@@ -16,9 +16,10 @@ export class AllExceptionsFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     const request = ctx.getRequest();
 
-    const status = exception instanceof HttpException
-      ? exception.getStatus()
-      : HttpStatus.INTERNAL_SERVER_ERROR;
+    const status =
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : HttpStatus.INTERNAL_SERVER_ERROR;
 
     const errorData = this.buildErrorPayload(exception);
     this.loggingService.error(`${request.method} ${request.url}`, errorData);
@@ -73,7 +74,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       }
 
       if (typeof res === 'object') {
-        const body: Record<string, unknown> = { ...base, ...(res as object) };
+        const body: Record<string, unknown> = { ...base, ...res };
         if (!body.message) {
           body.message = exception.message;
         }

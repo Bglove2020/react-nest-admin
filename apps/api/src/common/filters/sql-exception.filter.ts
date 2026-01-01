@@ -1,4 +1,9 @@
-import { ArgumentsHost, Catch, ExceptionFilter, HttpStatus } from '@nestjs/common';
+import {
+  ArgumentsHost,
+  Catch,
+  ExceptionFilter,
+  HttpStatus,
+} from '@nestjs/common';
 import { QueryFailedError } from 'typeorm';
 
 @Catch(QueryFailedError)
@@ -24,7 +29,10 @@ export class SqlExceptionFilter implements ExceptionFilter {
       } else {
         message = '唯一键冲突';
       }
-    } else if (code === 'ER_NO_REFERENCED_ROW_2' || msg.includes('a foreign key constraint fails')) {
+    } else if (
+      code === 'ER_NO_REFERENCED_ROW_2' ||
+      msg.includes('a foreign key constraint fails')
+    ) {
       message = '关联对象不存在';
     } else if (code === 'ER_DATA_TOO_LONG') {
       message = '字段长度超出限制';

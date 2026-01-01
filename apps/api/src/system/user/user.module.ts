@@ -7,7 +7,7 @@ import { SysDept } from '@/system/dept/entities/dept.entity';
 import { SysRole } from '../role/entities/role.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([SysUser, SysDept,SysRole])],
+  imports: [TypeOrmModule.forFeature([SysUser, SysDept, SysRole])],
   controllers: [UserController],
   providers: [UserService],
   exports: [UserService], // 导出UserService以便AuthModule使用

@@ -12,10 +12,7 @@ import { SysUser } from '@/system/user/entities/user.entity';
 import { SysMenu } from '@/system/menu/entities/menu.entity';
 
 @Module({
-  imports: [
-    UserModule,
-    TypeOrmModule.forFeature([SysUser, SysMenu]),
-  ],
+  imports: [UserModule, TypeOrmModule.forFeature([SysUser, SysMenu])],
   providers: [
     AuthService,
     ProfileService,
@@ -25,7 +22,10 @@ import { SysMenu } from '@/system/menu/entities/menu.entity';
         new JwtService({
           secret: config.get<string>('JWT_ACCESS_SECRET'),
           // 这里的泛型直接指定string还不行，需要指定ms.StringValue。ms.StringValue是ms库的类型，用于表示时间字符串。
-          signOptions: { expiresIn: config.get<ms.StringValue>('JWT_ACCESS_EXPIRES_IN') ?? '2h' },
+          signOptions: {
+            expiresIn:
+              config.get<ms.StringValue>('JWT_ACCESS_EXPIRES_IN') ?? '2h',
+          },
         }),
       inject: [ConfigService],
     },
@@ -34,12 +34,15 @@ import { SysMenu } from '@/system/menu/entities/menu.entity';
       useFactory: (config: ConfigService) =>
         new JwtService({
           secret: config.get<string>('JWT_REFRESH_SECRET'),
-          signOptions: { expiresIn: config.get<ms.StringValue>('JWT_REFRESH_EXPIRES_IN') ?? '7d' },
+          signOptions: {
+            expiresIn:
+              config.get<ms.StringValue>('JWT_REFRESH_EXPIRES_IN') ?? '7d',
+          },
         }),
       inject: [ConfigService],
-    }
+    },
   ],
   controllers: [AuthController, ProfileController],
-  exports: [AuthService, 'ACCESS_JWT', 'REFRESH_JWT'], 
+  exports: [AuthService, 'ACCESS_JWT', 'REFRESH_JWT'],
 })
 export class AuthModule {}

@@ -84,22 +84,45 @@ export class SysUser {
   })
   status: string;
 
-  @DeleteDateColumn({ name: 'deleted_at', type: 'datetime', comment: '删除时间' })
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'datetime',
+    comment: '删除时间',
+  })
   deletedAt: Date | null;
 
   @Column({ name: 'login_ip', length: 128, default: '', comment: '最后登录IP' })
   loginIp: string;
 
-  @Column({ name: 'login_date', type: 'datetime', nullable: true, comment: '最后登录时间' })
+  @Column({
+    name: 'login_date',
+    type: 'datetime',
+    nullable: true,
+    comment: '最后登录时间',
+  })
   loginDate: Date | null;
 
-  @Column({ name: 'create_by', type: 'varchar', length: 36, comment: '创建者（UUID）' })
+  @Column({
+    name: 'create_by',
+    type: 'varchar',
+    length: 36,
+    comment: '创建者（UUID）',
+  })
   createBy: string;
 
-  @CreateDateColumn({ name: 'create_time', type: 'datetime', comment: '创建时间' })
+  @CreateDateColumn({
+    name: 'create_time',
+    type: 'datetime',
+    comment: '创建时间',
+  })
   createTime: Date;
 
-  @Column({ name: 'update_by', type: 'varchar', length: 36, comment: '更新者（UUID）' })
+  @Column({
+    name: 'update_by',
+    type: 'varchar',
+    length: 36,
+    comment: '更新者（UUID）',
+  })
   updateBy: string;
 
   @UpdateDateColumn({
@@ -137,7 +160,7 @@ export class SysUser {
   // 然后@JoinColumn指出了当前字段在表中的名字，即表中实际的外键名字。同时还隐式的指明了
   // 这个字段引用的是SysDept实体中的主键字段。因此我觉得即使不传递第二个参数，也是完全能够知道这两个实体类之间的关系的？
   // 即应该可以正确的执行const user = await userRepository.findOne(1, { relations: ['dept'] }); ？
-  // 
+  //
   // @ManyToOne还可以传入第三个参数，这里影响不大，先不讨论
 
   @ManyToOne(() => SysDept)
@@ -148,16 +171,16 @@ export class SysUser {
   // =====================
   // 这里指定外键为另一张表的非主键时，也是支持的。在查询时，typeorm会自动根据非主键字段去查询关联实体，只要非主键字段的值与外键值相等，就可以查询到关联实体。
   // =====================
-  @JoinColumn({ name: 'dept_id'})
+  @JoinColumn({ name: 'dept_id' })
   // 这里可能会有迷惑，此实体类中的dept属性的类型是一个完整的实体类，而在表中映射的却是一个字符串外键？
   // 这是没什么问题的，因为他们并没有什么直接关联，@JoinColumn装饰器只是给这个类属性添加了一个元数据罢了。
   // TypeORM利用这个元数据去构建真实的表。
   // 我们在查询时，可以使用relations选项来指定关联查询，TypeORM会自动根据这个元数据去构建SQL语句？
   // 并将一个完整的关联对象的属性填充到查询结果中。
-  dept: SysDept;  
+  dept: SysDept;
 
   // 这个定义不定义无所谓，不会在表里生成一个对应的列，只是在查询得到结果时，把关联对象的主键提取出来，单独赋值给deptId字段。
-  @RelationId((user:SysUser)=> user.dept)
+  @RelationId((user: SysUser) => user.dept)
   deptId: string;
 
   // 用户角色关联 (通过中间表sys_user_role)
@@ -168,8 +191,8 @@ export class SysUser {
     name: 'sys_user_role', // 生成的中间表的表名
     // referencedColumnName属性用于指定本表的哪个键作为中间表的外键，name属性用于指定中间表中关于本表的外键名
     // 因此referencedColumnName需要填写实体类的属性名，name是实际表中的外键名
-    // 例如指定uuid为外键joinColumns: [{ name: 'user_id', referencedColumnName: 'id' }], 
-    joinColumns: [{ name: 'user_id'}],
+    // 例如指定uuid为外键joinColumns: [{ name: 'user_id', referencedColumnName: 'id' }],
+    joinColumns: [{ name: 'user_id' }],
     inverseJoinColumns: [{ name: 'role_id' }], // 同上
   })
   roles: SysRole[];

@@ -42,7 +42,7 @@ export class SysRole {
     update: false,
   })
   activeName: string;
-  
+
   @Column({ name: 'role_key', length: 100, comment: '角色权限字符串' })
   roleKey: string;
 
@@ -74,17 +74,25 @@ export class SysRole {
     name: 'status',
     length: 1,
     default: '0',
-    comment: '角色状态（0停用 1正常）', 
+    comment: '角色状态（0停用 1正常）',
   })
   status: string;
 
-  @DeleteDateColumn({ name: 'deleted_at', type: 'datetime', comment: '删除时间' })
+  @DeleteDateColumn({
+    name: 'deleted_at',
+    type: 'datetime',
+    comment: '删除时间',
+  })
   deletedAt: Date | null;
 
   @Column({ name: 'create_by', length: 64, default: '', comment: '创建者' })
   createBy: string;
 
-  @CreateDateColumn({ name: 'create_time', type: 'datetime', comment: '创建时间' })
+  @CreateDateColumn({
+    name: 'create_time',
+    type: 'datetime',
+    comment: '创建时间',
+  })
   createTime: Date;
 
   @Column({ name: 'update_by', length: 64, default: '', comment: '更新者' })
@@ -111,8 +119,8 @@ export class SysRole {
   @ManyToMany(() => SysMenu, (menu) => menu.roles)
   @JoinTable({
     name: 'sys_role_menu',
-    joinColumn: { name: 'role_id'},
-    inverseJoinColumn: { name: 'menu_id'},
+    joinColumn: { name: 'role_id' },
+    inverseJoinColumn: { name: 'menu_id' },
   })
   menus: SysMenu[];
 

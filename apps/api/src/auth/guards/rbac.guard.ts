@@ -41,7 +41,7 @@ export class RbacGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const user = (request as any).user;
+    const user = request.user;
 
     if (!user) {
       throw new ForbiddenException('未登录或令牌无效');

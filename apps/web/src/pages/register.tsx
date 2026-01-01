@@ -15,7 +15,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
   registerSchema,
-  type RegisterPayload,
   passwordSchema,
 } from "@ruoyi/contracts";
 import { axiosClient } from "@/lib/apiClient";

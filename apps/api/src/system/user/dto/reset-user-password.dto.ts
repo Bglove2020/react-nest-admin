@@ -1,6 +1,6 @@
-import { createZodDto } from "nestjs-zod";
-import { userResetPasswordSchema } from "@ruoyi/contracts";
+import { createZodDto } from 'nestjs-zod';
+import { userResetPasswordSchema } from '@ruoyi/contracts';
 
 export class ResetUserPasswordDto extends createZodDto(
-  userResetPasswordSchema
+  userResetPasswordSchema,
 ) {}

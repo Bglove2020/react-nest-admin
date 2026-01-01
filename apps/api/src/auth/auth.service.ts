@@ -24,7 +24,7 @@ export class AuthService {
     await this.userService.create(registerDto);
   }
 
-  async validateUser(userAccount: string, pass: string): Promise<any> {
+  async validateUser(userAccount: string, pass: string) {
     const user = await this.userService.getByAccount(userAccount);
     if (user && (await bcrypt.compare(pass, user.password))) {
       const { password, ...result } = user;
@@ -40,8 +40,8 @@ export class AuthService {
     }
     const roleKeys = Array.from(
       new Set(
-        Array.isArray((user as any).roles)
-          ? (user as any).roles
+        Array.isArray(user.roles)
+          ? user.roles
               .map((role: any) => role?.roleKey)
               .filter((key: string | undefined | null): key is string => !!key)
           : [],
@@ -64,11 +64,8 @@ export class AuthService {
         this.alsService.updateContext({ userId: payload.sub });
       }
       const roleKeys =
-        Array.isArray((payload as any).roleKeys) &&
-        (payload as any).roleKeys.length > 0
-          ? Array.from(
-              new Set((payload as any).roleKeys.filter((k: any) => !!k)),
-            )
+        Array.isArray(payload.roleKeys) && payload.roleKeys.length > 0
+          ? Array.from(new Set(payload.roleKeys.filter((k: any) => !!k)))
           : [];
       const newAccessToken = await this.accessJwtService.signAsync({
         userAccount: payload.userAccount,
