@@ -13,11 +13,25 @@ import { RadioGroup, RadioGroupItem } from "@ruoyi/ui";
 import { useCallback, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { userCreateFormSchema, userUpdateSchema } from "@ruoyi/contracts";
+import {
+  userCreateSchema,
+  userUpdateSchema,
+  passwordSchema,
+  passwordMismatchMessage,
+} from "@ruoyi/contracts";
 import { axiosClient } from "@/lib/apiClient";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { MultiSelectDropdown } from "@/components/Select/multi-select-dropdown";
+
+// 前端专用的用户创建表单 schema
+// 基于 userCreateSchema 扩展，添加确认密码字段
+const userCreateFormSchema = userCreateSchema.extend({
+  confirmPassword: passwordSchema,
+}).refine((data) => data.password === data.confirmPassword, {
+  message: passwordMismatchMessage,
+  path: ["confirmPassword"],
+});
 
 import { Field, FieldGroup, FieldLabel, FieldError } from "@ruoyi/ui";
 import { useForm, Controller } from "react-hook-form";
@@ -157,9 +171,17 @@ export function UserDialog({
       console.log("onSubmit data:", data);
       console.log("errors:", errors);
       await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // 如果是创建用户，移除 confirmPassword 字段
+      let submitData: any = data;
+      if (isCreate && 'confirmPassword' in data) {
+        const { confirmPassword, ...payload } = data as any;
+        submitData = payload;
+      }
+
       const res = await axiosClient.post(
         isCreate ? "/system/user/create" : "/system/user/update",
-        data,
+        submitData,
       );
       if (res.data.code === 200) {
         toast.success(res.data.msg);

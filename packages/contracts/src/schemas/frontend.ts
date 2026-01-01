@@ -1,5 +1,18 @@
 import { z } from "zod";
 
+/**
+ * 前端展示类型定义
+ *
+ * 这些类型用于后端返回给前端的展示数据
+ * 与 Payload 类型（前端发送给后端）的区别：
+ * - Payload: 包含业务所需的原始字段（如 deptId）
+ * - Frontend: 包含处理后的展示字段（如 deptName）
+ *
+ * 示例：
+ * - UserCreatePayload: { deptId: string }
+ * - FrontendUser: { deptId: string, deptName: string }
+ */
+
 export const frontendUserSchema = z.object({
   id: z.string(),
   account: z.string(),

@@ -12,7 +12,12 @@ export const loginSchema = z.object({
   password: passwordSchema,
 });
 
-export const registerBackendSchema = z.object({
+/**
+ * 用户注册 Schema
+ * 用于用户自行注册，不包含 deptId 和 roleIds
+ * 这些字段由后端根据系统配置自动设置
+ */
+export const registerSchema = z.object({
   account: accountSchema,
   name: nameSchema,
   email: emailSchema,
@@ -20,15 +25,5 @@ export const registerBackendSchema = z.object({
   sex: sexSchema,
 });
 
-export const registerFrontendSchema = registerBackendSchema
-  .extend({
-    confirmPassword: passwordSchema,
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "两次输入的密码不一致",
-    path: ["confirmPassword"],
-  });
-
 export type LoginPayload = z.infer<typeof loginSchema>;
-export type RegisterBackendPayload = z.infer<typeof registerBackendSchema>;
-export type RegisterFrontendPayload = z.infer<typeof registerFrontendSchema>;
+export type RegisterPayload = z.infer<typeof registerSchema>;

@@ -9,30 +9,25 @@ import {
   statusSchema,
 } from "./common";
 
+/**
+ * 管理员创建用户 Schema
+ * 用于管理员在用户管理中创建用户，必须指定部门和角色
+ */
 export const userCreateSchema = z.object({
   account: accountSchema,
   name: nameSchema,
   email: emailSchema,
   password: passwordSchema,
   sex: sexSchema,
-  deptId: idSchema.optional(),
-  roleIds: z.array(idSchema).optional(),
-  status: statusSchema.optional(),
-  avatar: z.string().optional(),
+  deptId: idSchema,
+  roleIds: z.array(idSchema).min(1, "请至少选择一个角色"),
+  status: statusSchema,
 });
 
-export const userCreateFormSchema = userCreateSchema
-  .extend({
-    deptId: idSchema,
-    roleIds: z.array(idSchema).min(1, "请至少选择一个角色"),
-    confirmPassword: passwordSchema,
-    status: statusSchema,
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "\u4e24\u6b21\u8f93\u5165\u7684\u5bc6\u7801\u4e0d\u4e00\u81f4",
-    path: ["confirmPassword"],
-  });
-
+/**
+ * 更新用户 Schema
+ * 用于编辑用户信息
+ */
 export const userUpdateSchema = z.object({
   id: idSchema,
   name: nameSchema.optional(),
@@ -49,6 +44,5 @@ export const userResetPasswordSchema = z.object({
 });
 
 export type UserCreatePayload = z.infer<typeof userCreateSchema>;
-export type UserCreateForm = z.infer<typeof userCreateFormSchema>;
 export type UserUpdatePayload = z.infer<typeof userUpdateSchema>;
 export type UserResetPasswordPayload = z.infer<typeof userResetPasswordSchema>;

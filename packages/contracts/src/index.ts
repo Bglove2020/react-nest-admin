@@ -1,3 +1,4 @@
+export * from "./schemas/api-response";
 export * from "./schemas/auth";
 export * from "./schemas/common";
 export * from "./schemas/dept";

@@ -9,6 +9,7 @@ import {
 const isFrameSchema = z.enum(["0", "1"]);
 const visibleSchema = z.enum(["0", "1"]);
 
+// 前端专用的 discriminated union schemas（类型更安全）
 const menuCatalogBaseSchema = z.object({
   menuType: z.literal("M"),
   name: z.string().min(1, "请输入菜单名称"),
@@ -57,28 +58,37 @@ const menuButtonBaseSchema = z.object({
 
 export const menuButtonSchema = menuButtonBaseSchema;
 
+/**
+ * 前端专用：使用 discriminated union 获得更好的类型推断
+ */
 export const menuFormSchema = z.discriminatedUnion("menuType", [
   menuCatalogSchema,
   menuItemSchema,
   menuButtonSchema,
 ]);
 
-export const menuCreateSchema = menuFormSchema;
+/**
+ * 后端专用：使用单一对象 schema，兼容 nestjs-zod
+ * 所有字段都是可选的，由业务逻辑根据 menuType 进行验证
+ */
+export const menuCreateSchema = z.object({
+  menuType: z.enum(["M", "C", "F"]),
+  name: z.string().min(1, "请输入菜单名称"),
+  parentId: optionalIdSchema.optional(),
+  perms: z.string().optional(),
+  isFrame: isFrameSchema.optional(),
+  visible: visibleSchema.optional(),
+  path: z.string().optional(),
+  sortOrder: sortOrderSchema,
+  status: statusSchema.optional(),
+});
 
-export const menuUpdateSchema = z.union([
-  z.discriminatedUnion("menuType", [
-    menuCatalogBaseSchema.extend({ id: idSchema }).refine(refineCatalogPath, {
-      message: "\u5916\u94fe\u5fc5\u987b\u586b\u5199\u8def\u5f84",
-      path: ["path"],
-    }),
-    menuItemBaseSchema.extend({ id: idSchema }),
-    menuButtonBaseSchema.extend({ id: idSchema }),
-  ]),
-  z.object({
-    id: idSchema,
-    status: statusSchema,
-  }),
-]);
+/**
+ * 后端专用：更新 schema
+ */
+export const menuUpdateSchema = menuCreateSchema.extend({
+  id: idSchema,
+});
 
 export type MenuFormPayload = z.infer<typeof menuFormSchema>;
 export type MenuCreatePayload = z.infer<typeof menuCreateSchema>;

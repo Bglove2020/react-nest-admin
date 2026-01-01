@@ -12,15 +12,29 @@ import { RadioGroup, RadioGroupItem } from "@ruoyi/ui";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-// import * as z from "zod";
+import * as z from "zod";
 import {
-  registerFrontendSchema,
-  type RegisterFrontendPayload,
+  registerSchema,
+  type RegisterPayload,
+  passwordSchema,
 } from "@ruoyi/contracts";
 import { axiosClient } from "@/lib/apiClient";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { HoverCardFormItem } from "@ruoyi/ui";
+
+/**
+ * 前端注册表单 schema
+ * 基于 registerSchema 扩展，添加确认密码字段
+ */
+const registerFormSchema = registerSchema.extend({
+  confirmPassword: passwordSchema,
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "两次输入的密码不一致",
+  path: ["confirmPassword"],
+});
+
+type RegisterForm = z.infer<typeof registerFormSchema>;
 
 async function checkUserAccount(account: string) {
   try {
@@ -38,7 +52,8 @@ async function checkUserAccount(account: string) {
 let lastValidatedAccount = "";
 let lastValidationResult = true;
 
-const RegisterSchema = registerFrontendSchema.refine(
+// 添加账号可用性校验
+const RegisterSchema = registerFormSchema.refine(
   async (data) => {
     if (data.account === lastValidatedAccount) {
       return lastValidationResult;
@@ -54,7 +69,6 @@ const RegisterSchema = registerFrontendSchema.refine(
     path: ["account"],
   },
 );
-// type TRegisterSchema = z.infer<typeof RegisterSchema>;
 
 export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
   const navigate = useNavigate();
@@ -64,7 +78,7 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
     handleSubmit,
     control,
     formState: { errors, isSubmitting },
-  } = useForm<RegisterFrontendPayload>({
+  } = useForm<RegisterForm>({
     resolver: zodResolver(RegisterSchema),
     mode: "onBlur",
     defaultValues: {
@@ -77,13 +91,16 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
     },
   });
 
-  const onSubmit = async (data: RegisterFrontendPayload) => {
+  const onSubmit = async (data: RegisterForm) => {
     try {
       // 模拟 API 调用延迟
       await new Promise((resolve) => setTimeout(resolve, 500));
 
+      // 移除 confirmPassword，只发送后端需要的字段
+      const { confirmPassword, ...payload } = data;
+
       // 实际的注册 API 调用
-      const res = await axiosClient.post("/auth/register", data);
+      const res = await axiosClient.post("/auth/register", payload);
       console.log(res);
       if (res.status === 201) {
         // 注册成功，跳转到登录页

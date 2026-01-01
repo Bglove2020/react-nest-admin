@@ -1,4 +1,4 @@
 import { createZodDto } from 'nestjs-zod';
-import { registerBackendSchema } from '@ruoyi/contracts';
+import { registerSchema } from '@ruoyi/contracts';
 
-export class RegisterDto extends createZodDto(registerBackendSchema) {}
+export class RegisterDto extends createZodDto(registerSchema) {}

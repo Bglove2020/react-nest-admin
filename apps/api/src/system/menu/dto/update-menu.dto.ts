@@ -1,6 +1,4 @@
 import { createZodDto } from 'nestjs-zod';
-import { menuUpdateDtoSchema } from './menu.schema';
+import { menuUpdateSchema } from '@ruoyi/contracts';
 
-export class UpdateMenuDto extends createZodDto(
-  menuUpdateDtoSchema,
-) {}
+export class UpdateMenuDto extends createZodDto(menuUpdateSchema) {}

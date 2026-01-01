@@ -7,3 +7,6 @@ logs/
 !.env.example
 .DS_Store
 *.log
+.claude
+.cursor
+.spec-workflow

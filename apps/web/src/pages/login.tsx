@@ -7,26 +7,17 @@ import {
   CardTitle,
 } from "@ruoyi/ui";
 import { Field, FieldDescription, FieldGroup, FieldLabel } from "@ruoyi/ui";
-import * as z from "zod";
 import { Input } from "@ruoyi/ui";
 import { axiosClient, setAccessToken } from "@/lib/apiClient";
-import { useNavigate, Link } from "react-router-dom"; // 引入 useNavigate 和 Link
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { userAccountSchema, passwordSchema } from "@/lib/validation";
+import { loginSchema, type LoginPayload } from "@ruoyi/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 
-// 定义数据校验类
-const LoginSchema = z.object({
-  // 必填，且必須是有效的 email 格式
-  account: userAccountSchema(),
-  // 必填，長度至少為 8
-  password: passwordSchema(),
-});
-
-// 提取数据校验类型
-type LoginSchemaType = z.infer<typeof LoginSchema>;
+// 使用 contracts 中的 loginSchema
+type LoginSchemaType = LoginPayload;
 
 export function LoginForm() {
   // 初始化 useNavigate
@@ -38,7 +29,7 @@ export function LoginForm() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<LoginSchemaType>({
-    resolver: zodResolver(LoginSchema),
+    resolver: zodResolver(loginSchema),
     mode: "onBlur",
     defaultValues: {
       account: "",

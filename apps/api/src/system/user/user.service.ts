@@ -22,8 +22,8 @@ import * as bcrypt from 'bcryptjs';
 import { SysRole } from '../role/entities/role.entity';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '@/common/redis/redis.service';
-
 import { removeUndefined } from '@/common/utils/remove-undefined.util';
+import { RegisterDto } from '@/auth/dto/register.dto';
 
 @Injectable()
 export class UserService {
@@ -85,10 +85,10 @@ export class UserService {
     }
   }
 
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto | RegisterDto) {
     let dept: SysDept | null = null;
     try {
-      if (createUserDto.deptId) {
+      if ('deptId' in createUserDto && createUserDto.deptId) {
         dept = await this.deptRepository.findOne({
           where: { id: createUserDto.deptId },
         });
@@ -107,7 +107,11 @@ export class UserService {
     }
 
     let roles: Partial<SysRole>[] = [];
-    if (createUserDto.roleIds && createUserDto.roleIds.length > 0) {
+    if (
+      'roleIds' in createUserDto &&
+      createUserDto.roleIds &&
+      createUserDto.roleIds.length > 0
+    ) {
       try {
         roles = await this.roleRepository.find({
           where: { id: In(createUserDto.roleIds) },
@@ -148,8 +152,7 @@ export class UserService {
       password: hashedPassword,
       dept: dept,
       roles: roles,
-      avatar: createUserDto.avatar,
-      status: createUserDto.status ?? '1',
+      status: 'status' in createUserDto ? createUserDto.status : '1',
       createBy: 'system',
       updateBy: 'system',
     });
