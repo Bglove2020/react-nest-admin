@@ -15,6 +15,8 @@ import { CreateDictTypeDto } from './dto/create-dict-type.dto';
 import { UpdateDictTypeDto } from './dto/update-dict-type.dto';
 import { CreateDictDataDto } from './dto/create-dict-data.dto';
 import { UpdateDictDataDto } from './dto/update-dict-data.dto';
+import { DictListDto } from './dto/dict-list.dto';
+import { DictDataListDto } from './dto/dict-data-list.dto';
 import {
   toFrontendDictDataDto,
   toFrontendDictDataDtos,
@@ -33,20 +35,28 @@ export class DictController {
   // 已更新
   @RequirePerms('system:dict:list')
   @Get('list')
-  async list(): Promise<{
+  async list(@Query() query: DictListDto): Promise<{
     code: number;
     msg: string;
-    data: FrontendDictType[];
+    data: {
+      list: FrontendDictType[];
+      total: number;
+    };
   }> {
-    this.loggingService.log('GET /system/dict/list');
-    const dicts = await this.dictService.list();
+    this.loggingService.log('GET /system/dict/list', {
+      params: query,
+    });
+    const { list, total } = await this.dictService.list(query);
     this.loggingService.log('GET /system/dict/list success', {
-      responseDescriptor: { type: 'list', count: dicts.length },
+      responseDescriptor: { type: 'list', count: list.length, total },
     });
     return {
       code: 200,
       msg: '字典列表获取成功',
-      data: toFrontendDictTypeDtos(dicts),
+      data: {
+        list: toFrontendDictTypeDtos(list),
+        total,
+      },
     };
   }
 
@@ -124,27 +134,33 @@ export class DictController {
   @RequirePerms('system:dict:list')
   @Get('data/list')
   async listData(
-    @Query('id') id?: string,
+    @Query() query: DictDataListDto,
     @Query('type') type?: string,
   ): Promise<{
     code: number;
     msg: string;
-    data: FrontendDictData[];
+    data: {
+      list: FrontendDictData[];
+      total: number;
+    };
   }> {
     this.loggingService.log('GET /system/dict/data/list', {
-      query: { id, type },
+      query: { ...query, type },
     });
     if (!type) {
       throw new BadRequestException({ msg: 'type 参数是必需的', code: 400 });
     }
-    const dataList = await this.dictService.dataList(id, type);
+    const { list, total } = await this.dictService.dataList(query, type);
     this.loggingService.log('GET /system/dict/data/list success', {
-      responseDescriptor: { type: 'list', count: dataList.length },
+      responseDescriptor: { type: 'list', count: list.length, total },
     });
     return {
       code: 200,
       msg: '字典数据列表获取成功',
-      data: toFrontendDictDataDtos(dataList),
+      data: {
+        list: toFrontendDictDataDtos(list),
+        total,
+      },
     };
   }
 

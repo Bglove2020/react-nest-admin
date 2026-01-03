@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import {
   DropdownMenu,
@@ -27,12 +27,6 @@ type Filters = {
   status: string;
 };
 
-const extractFilterEntries = (filters: Record<string, unknown>) =>
-  Object.entries(filters).map(([key, val]) => ({
-    id: key,
-    value: val,
-  }));
-
 export default function DictManage() {
   const navigate = useNavigate();
 
@@ -40,6 +34,21 @@ export default function DictManage() {
     name: "",
     type: "",
     status: "",
+  });
+
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [total, setTotal] = useState(0);
+
+  // 排序状态
+  const [sort, setSort] = useState<{
+    sortField: string | null;
+    sortOrder: "asc" | "desc" | null;
+  }>({
+    sortField: null,
+    sortOrder: null,
   });
 
   const [dictRowSelection, setDictRowSelection] = useState<RowSelectionState>(
@@ -51,15 +60,54 @@ export default function DictManage() {
   const [dicts, setDicts] = useState<DictType[]>([]);
   const [activeDict, setActiveDict] = useState<DictType | undefined>(undefined);
 
-  useEffect(() => {
-    loadDicts();
-  }, []);
+  const loadDicts = useCallback(async () => {
+    const { name, type, status } = filters;
+    axiosClient
+      .get<{
+        data: {
+          list: DictType[];
+          total: number;
+        };
+      }>("/system/dict/list", {
+        params: {
+          pageNum: pagination.pageIndex,
+          pageSize: pagination.pageSize,
+          name: name || undefined,
+          type: type || undefined,
+          status: status || undefined,
+          sortField: sort.sortField || undefined,
+          sortOrder: sort.sortOrder || undefined,
+        },
+      })
+      .then((res) => {
+        setDicts(res.data.data.list);
+        setTotal(res.data.data.total);
+      })
+      .catch((err) => toast.error(String(err)));
+  }, [filters, pagination, sort]);
 
-  const loadDicts = useCallback(() => {
-    axiosClient.get<{ data: DictType[] }>("/system/dict/list").then((res) => {
-      setDicts(res.data.data);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadDicts();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [loadDicts]);
+
+  // 处理排序
+  const handleSort = (columnId: string) => {
+    setSort((prev) => {
+      if (prev.sortField === columnId) {
+        if (prev.sortOrder === "asc") {
+          return { sortField: columnId, sortOrder: "desc" };
+        } else if (prev.sortOrder === "desc") {
+          return { sortField: null, sortOrder: null };
+        }
+      }
+      return { sortField: columnId, sortOrder: "asc" };
     });
-  }, []);
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   const updateDictStatus = (id: string, status: boolean) => {
     axiosClient
@@ -172,12 +220,6 @@ export default function DictManage() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {/* <DropdownMenuItem
-              className="cursor-pointer gap-8"
-              onClick={() => goToDataPage(row.original)}
-            >
-              <span className="grow">查看数据</span>
-            </DropdownMenuItem> */}
             <DropdownMenuItem
               className="cursor-pointer gap-8"
               onClick={() => {
@@ -262,9 +304,13 @@ export default function DictManage() {
       </div>
 
       <DataTable
-        filters={extractFilterEntries(filters)}
         data={dicts}
         columns={typeColumns}
+        total={total}
+        pagination={pagination}
+        onPaginationChange={setPagination}
+        sort={sort}
+        onSort={handleSort}
         rowSelection={dictRowSelection}
         onRowSelectionChange={setDictRowSelection}
       />

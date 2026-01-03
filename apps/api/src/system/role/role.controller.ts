@@ -1,7 +1,8 @@
-import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { RoleListDto } from './dto/role-list.dto';
 import { LoggingService } from '@/common/logging/logging.service';
 import type { FrontendRole } from '@ruoyi/contracts';
 import { toFrontendDtoList } from './mapper/to-frontend-user.mapper';
@@ -29,14 +30,23 @@ export class RoleController {
 
   @RequirePerms('system:role:list')
   @Get('list')
-  async list() {
-    this.loggingService.log('GET /system/role/list');
-    const roles = await this.roleService.list();
-    const data: FrontendRole[] = toFrontendDtoList(roles);
-    this.loggingService.log('GET /system/role/list success', {
-      responseDescriptor: { type: 'list', count: data.length },
+  async list(@Query() query: RoleListDto) {
+    this.loggingService.log('GET /system/role/list', {
+      params: query,
     });
-    return { code: 200, msg: '角色列表获取成功', data };
+    const { list, total } = await this.roleService.list(query);
+    const data: FrontendRole[] = toFrontendDtoList(list);
+    this.loggingService.log('GET /system/role/list success', {
+      responseDescriptor: { type: 'list', count: data.length, total },
+    });
+    return {
+      code: 200,
+      msg: '角色列表获取成功',
+      data: {
+        list: data,
+        total,
+      },
+    };
   }
 
   @RequirePerms('system:role:update')

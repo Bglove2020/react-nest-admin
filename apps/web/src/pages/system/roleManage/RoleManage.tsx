@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Input } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
 import { SingleSelect } from "@/components/Select/single-select";
@@ -35,25 +35,29 @@ type role = {
   sortOrder: number;
 };
 
-// 将 filters 转换为 { id, value } 对象数组
-const extractFilterEntries = (filters: Filters) => {
-  return Object.entries(filters).map(([key, val]) => ({
-    id: key,
-    value: val,
-  }));
-};
-
 export default function RoleManage() {
-  // alert('设备宽度:'+window.innerWidth+'设备高度:'+window.innerHeight)
   const [filters, setFilters] = useState<Filters>({
     name: "",
     roleKey: "",
     status: "",
   });
 
-  // const [loading, setLoading] = useState(false);
   const [data, setData] = useState<role[]>([]);
+  const [total, setTotal] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  // 排序状态
+  const [sort, setSort] = useState<{
+    sortField: string | null;
+    sortOrder: "asc" | "desc" | null;
+  }>({
+    sortField: null,
+    sortOrder: null,
+  });
 
   // 控制操作列弹窗（可编程开关）
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
@@ -61,27 +65,58 @@ export default function RoleManage() {
   const [activeRole, setActiveRole] = useState<role | null>(null);
   const [isCreate, setIsCreate] = useState(false);
 
-  const loadRoles = useCallback(() => {
-    axiosClient
-      .get<{ data: role[] }>("/system/role/list")
-      .then((res) => {
-        setData(res.data.data);
-      })
-      .catch((e) => {
-        toast.error(String(e));
-      });
-  }, []);
+  const loadRoles = useCallback(async () => {
+    try {
+      const params = {
+        pageNum: pagination.pageIndex,
+        pageSize: pagination.pageSize,
+        name: filters.name || undefined,
+        roleKey: filters.roleKey || undefined,
+        status: filters.status || undefined,
+        sortField: sort.sortField || undefined,
+        sortOrder: sort.sortOrder || undefined,
+      };
+
+      const res = await axiosClient.get<{
+        code: number;
+        msg: string;
+        data: { list: role[]; total: number };
+      }>("/system/role/list", { params });
+
+      setData(res.data.data.list);
+      setTotal(res.data.data.total);
+    } catch (e) {
+      toast.error(String(e));
+    }
+  }, [pagination, filters, sort]);
 
   const deleteRole = useCallback(async () => {
-    return await axiosClient.delete(
-      `/system/role/delete/${activeRole?.id}`,
-    );
+    return await axiosClient.delete(`/system/role/delete/${activeRole?.id}`);
   }, [activeRole]);
 
+  // 监听分页和过滤参数变化，自动加载数据（带防抖）
   useEffect(() => {
-    // 初始加载
-    loadRoles();
+    const timer = setTimeout(() => {
+      loadRoles();
+    }, 300);
+    return () => clearTimeout(timer);
   }, [loadRoles]);
+
+  // 处理排序
+  const handleSort = (columnId: string) => {
+    setSort((prev) => {
+      if (prev.sortField === columnId) {
+        if (prev.sortOrder === "asc") {
+          return { sortField: columnId, sortOrder: "desc" };
+        } else if (prev.sortOrder === "desc") {
+          return { sortField: null, sortOrder: null };
+        }
+      }
+      return { sortField: columnId, sortOrder: "asc" };
+    });
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
+
   const statusList = useDictDataByTypeQuery("status").data ?? [];
 
   const openDeleteDialogFor = (r: role) => {
@@ -242,14 +277,6 @@ export default function RoleManage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-start gap-2">
-        {/* <Button variant="outline">
-          <span>导入</span>
-          <Import />
-        </Button>
-        <Button variant="outline">
-          <span>导出</span>
-          <Download />
-        </Button> */}
         <Button
           variant="outline"
           onClick={() => {
@@ -260,31 +287,17 @@ export default function RoleManage() {
           <span>新增角色</span>
           <Plus />
         </Button>
-
-        {/* <Button
-          variant="outline"
-          disabled={Object.keys(rowSelection).length === 0}
-          onClick={() => {
-            if (Object.keys(rowSelection).length === 0) {
-              toast.error("请先选择要删除的行");
-              return;
-            }
-            console.log("选中的行:", rowSelection);
-            setMultiDeleteDialogOpen(true);
-            // TODO: 在这里调用后端进行批量删除，完成后刷新表格
-            // axiosClient.post('/user/batch-delete', { ids: Object.keys(rowSelection) }).then(() => loadUsers())
-          }}
-        >
-          <span>批量删除</span>
-          <Trash />
-        </Button> */}
       </div>
 
       <div className="w-full">
         <DataTable
-          filters={extractFilterEntries(filters)}
           data={data}
           columns={columns}
+          total={total}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          sort={sort}
+          onSort={handleSort}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
         />

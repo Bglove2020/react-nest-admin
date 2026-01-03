@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { ColumnDef, RowSelectionState } from "@tanstack/react-table";
 import { useSearchParams } from "react-router-dom";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@ruoyi/ui";
 import { Checkbox } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
+import { Input } from "@ruoyi/ui";
 import { DataTable } from "@/components/Table/data";
 import { Switch } from "@ruoyi/ui";
 import { MoreHorizontal, Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
@@ -21,14 +22,9 @@ import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import { SingleSelect } from "@/components/Select/single-select";
 
 type DataFilters = {
+  label: string;
   status: string;
 };
-
-const extractFilterEntries = (filters: Record<string, unknown>) =>
-  Object.entries(filters).map(([key, val]) => ({
-    id: key,
-    value: val,
-  }));
 
 export default function DictDataPage() {
   const [searchParams] = useSearchParams();
@@ -36,8 +32,25 @@ export default function DictDataPage() {
   const dictType = searchParams.get("type") ?? "";
 
   const [dataFilters, setDataFilters] = useState<DataFilters>({
+    label: "",
     status: "",
   });
+
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+  const [total, setTotal] = useState(0);
+
+  // 排序状态
+  const [sort, setSort] = useState<{
+    sortField: string | null;
+    sortOrder: "asc" | "desc" | null;
+  }>({
+    sortField: null,
+    sortOrder: null,
+  });
+
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [dictDataList, setDictDataList] = useState<DictData[]>([]);
   const [dataDialogOpen, setDataDialogOpen] = useState(false);
@@ -45,19 +58,54 @@ export default function DictDataPage() {
   const [dataIsCreate, setDataIsCreate] = useState(true);
   const [deleteDataDialogOpen, setDeleteDataDialogOpen] = useState(false);
 
-  useEffect(() => {
-    loadDictData();
-  }, []);
-
-  const loadDictData = useCallback(() => {
+  const loadDictData = useCallback(async () => {
+    const { label, status } = dataFilters;
     axiosClient
-      .get<{ data: DictData[] }>("/system/dict/data/list", {
-        params: { type: dictType },
+      .get<{
+        data: {
+          list: DictData[];
+          total: number;
+        };
+      }>("/system/dict/data/list", {
+        params: {
+          pageNum: pagination.pageIndex,
+          pageSize: pagination.pageSize,
+          type: dictType,
+          label: label || undefined,
+          status: status || undefined,
+          sortField: sort.sortField || undefined,
+          sortOrder: sort.sortOrder || undefined,
+        },
       })
       .then((res) => {
-        setDictDataList(res.data.data);
-      });
-  }, [dictType]);
+        setDictDataList(res.data.data.list);
+        setTotal(res.data.data.total);
+      })
+      .catch((err) => toast.error(String(err)));
+  }, [dataFilters, pagination, dictType, sort]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      loadDictData();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [loadDictData]);
+
+  // 处理排序
+  const handleSort = (columnId: string) => {
+    setSort((prev) => {
+      if (prev.sortField === columnId) {
+        if (prev.sortOrder === "asc") {
+          return { sortField: columnId, sortOrder: "desc" };
+        } else if (prev.sortOrder === "desc") {
+          return { sortField: null, sortOrder: null };
+        }
+      }
+      return { sortField: columnId, sortOrder: "asc" };
+    });
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   const updateDataStatus = (id: string, status: boolean) => {
     axiosClient
@@ -185,14 +233,6 @@ export default function DictDataPage() {
     <div className="space-y-4 px-8 py-6">
       <div className="flex items-center justify-between gap-3">
         <div className="relative flex items-center gap-3">
-          {/* <Button
-            className="absolute left-[-42px]"
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate(-1)}
-          >
-            <ArrowLeft />
-          </Button> */}
           <div className="flex-1 text-xl font-semibold">
             {dictName || "未命名字典"}
           </div>
@@ -202,6 +242,16 @@ export default function DictDataPage() {
       </div>
 
       <div className="flex flex-col items-start gap-2 space-y-3 rounded-md sm:flex-row sm:flex-wrap sm:gap-4">
+        <div className="flex w-full max-w-[260px] items-center gap-2">
+          <Input
+            placeholder="请输入字典标签"
+            value={dataFilters.label}
+            onChange={(e) =>
+              setDataFilters((f) => ({ ...f, label: e.target.value }))
+            }
+            className="w-full py-2 text-sm"
+          />
+        </div>
         <div className="flex w-full max-w-[260px] items-center gap-2">
           <SingleSelect
             className="w-full"
@@ -233,9 +283,13 @@ export default function DictDataPage() {
       </div>
 
       <DataTable
-        filters={extractFilterEntries(dataFilters)}
         data={dictDataList}
         columns={dataColumns}
+        total={total}
+        pagination={pagination}
+        onPaginationChange={setPagination}
+        sort={sort}
+        onSort={handleSort}
         rowSelection={rowSelection}
         onRowSelectionChange={setRowSelection}
       />

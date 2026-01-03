@@ -1,17 +1,13 @@
-﻿"use client";
+"use client";
 
 import * as React from "react";
 import {
   useReactTable,
   getCoreRowModel,
-  getSortedRowModel,
-  getFilteredRowModel,
-  getPaginationRowModel,
   flexRender,
 } from "@tanstack/react-table";
 import type {
   ColumnDef,
-  SortingState,
   VisibilityState,
   OnChangeFn,
   RowSelectionState,
@@ -24,57 +20,81 @@ import {
   TableHeader,
   TableRow,
 } from "@ruoyi/ui";
-import { DataTablePagination } from "@/components/Table/pagination";
-import { SingleSelect } from "@/components/Select/single-select";
+import { SimplePagination } from "@/components/Table/simple-pagination";
+
+type SortState = {
+  sortField: string | null;
+  sortOrder: "asc" | "desc" | null;
+};
 
 export function DataTable<T extends { id: string }>({
-  filters,
   data,
   columns,
+  total,
+  pagination,
+  onPaginationChange,
+  sort = { sortField: null, sortOrder: null },
+  onSort = () => {},
   rowSelection,
   onRowSelectionChange,
+  loading = false,
 }: {
-  filters: { id: string; value: unknown }[];
   data: T[];
   columns: ColumnDef<T, any>[];
-  rowSelection: RowSelectionState;
+  total: number;
+  pagination: { pageIndex: number; pageSize: number };
+  onPaginationChange: (pagination: { pageIndex: number; pageSize: number }) => void;
+  sort?: SortState;
+  onSort?: (columnId: string) => void;
+  rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  loading?: boolean;
 }) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
-  // const [rowSelection, setRowSelection] = React.useState({})
-  const [pagination, setPagination] = React.useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
 
   const table = useReactTable({
     data,
-    columns,
-    onSortingChange: setSorting,
+    columns: columns.map((col) => ({
+      ...col,
+      // 添加排序指示器到 header
+      header: (context: any) => {
+        const columnId = (col.id || col.accessorKey) as string;
+        const isSorted = sort.sortField === columnId;
+
+        // 默认不可排序，需要显式启用
+        const isSortable = col.enableSorting === true;
+
+        const headerContent = col.header
+          ? flexRender(col.header, context)
+          : columnId;
+
+        return (
+          <div
+            className={`flex items-center ${
+              isSortable ? "cursor-pointer select-none" : ""
+            }`}
+            onClick={() => isSortable && onSort(columnId)}
+          >
+            {headerContent}
+            {isSortable && (
+              <span className="ml-2 text-muted-foreground">
+                {isSorted ? (sort.sortOrder === "asc" ? "↑" : "↓") : "↕"}
+              </span>
+            )}
+          </div>
+        );
+      },
+    })),
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    onRowSelectionChange: onRowSelectionChange,
-    onPaginationChange: setPagination,
+    onRowSelectionChange,
     getRowId: (row) => row.id,
     state: {
-      sorting,
-      columnFilters: filters,
       columnVisibility,
       rowSelection,
-      pagination,
     },
   });
-
-  // console.log('initialState',table.initialState)
-  // console.log('state',table.getState())
-  // console.log('allColumns',table.getAllColumns())
-  // console.log('headerGroups',table.getHeaderGroups())
-  console.log("rows", table.getRowModel().rows);
 
   return (
     <div className="w-full max-w-full">
@@ -137,43 +157,26 @@ export function DataTable<T extends { id: string }>({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  暂无数据
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      <div className="flex flex-wrap items-center justify-end gap-6 py-4">
-        <div className="flex flex-1 items-center justify-between text-sm">
-          <div className="w-30 text-muted-foreground">
-            {table.getFilteredSelectedRowModel().rows.length} of{" "}
-            {table.getFilteredRowModel().rows.length} selected.
-          </div>
-          <div className="flex items-center">
-            <SingleSelect
-              value={pagination.pageSize}
-              onChange={(value) =>
-                setPagination({ ...pagination, pageSize: value })
-              }
-              label="每页显示条数"
-              canClear={false}
-              options={[
-                { label: "5", value: 5 },
-                { label: "10", value: 10 },
-                { label: "20", value: 20 },
-                { label: "30", value: 30 },
-              ]}
-              className="w-11!"
-            />
-            <span className="ml-2 w-12">行 / 页</span>
-          </div>
-        </div>
 
-        <div className="shrink">
-          <DataTablePagination table={table} />
-        </div>
-      </div>
+      <SimplePagination
+        pageIndex={pagination.pageIndex}
+        pageSize={pagination.pageSize}
+        total={total}
+        onPageChange={(newPageIndex) =>
+          onPaginationChange({ ...pagination, pageIndex: newPageIndex })
+        }
+        onPageSizeChange={(newPageSize) =>
+          onPaginationChange({ pageIndex: 0, pageSize: newPageSize })
+        }
+        loading={loading}
+      />
     </div>
   );
 }

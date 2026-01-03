@@ -5,6 +5,7 @@ export * from "./schemas/dept";
 export * from "./schemas/dict";
 export * from "./schemas/frontend";
 export * from "./schemas/menu";
+export * from "./schemas/pagination";
 export * from "./schemas/profile";
 export * from "./schemas/role";
 export * from "./schemas/router";

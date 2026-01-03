@@ -9,13 +9,12 @@ export type { DictData, DictType };
 
 // 通过字典类型直接获取字典数据（不需要 id）
 async function fetchDictDataByType(dictType: string): Promise<DictData[]> {
-  const res = await axiosClient.get<{ data: DictData[] }>(
-    "/system/dict/data/list",
-    {
-      params: { type: dictType },
-    }
-  );
-  return res.data.data;
+  const res = await axiosClient.get<{
+    data: { list: DictData[]; total: number };
+  }>("/system/dict/data/list", {
+    params: { type: dictType },
+  });
+  return res.data.data.list;
 }
 
 // 选项格式
@@ -27,7 +26,7 @@ export type DictOption = {
 // 将字典数据转换为选项格式的工具函数
 export function dictDataToOptions(
   dictData: DictData[],
-  filterStatus = true
+  filterStatus = true,
 ): DictOption[] {
   let data = dictData;
 
@@ -49,7 +48,7 @@ export function dictDataToOptions(
 // 通过字典类型直接获取字典数据的 hook（推荐使用）
 export function useDictDataByTypeQuery(
   dictType: string,
-  enabled = true
+  enabled = true,
 ): UseQueryResult<DictData[]> {
   return useQuery({
     queryKey: ["dict-type", dictType],

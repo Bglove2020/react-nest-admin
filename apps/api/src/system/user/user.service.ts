@@ -9,6 +9,7 @@ import {
   DeepPartial,
   In,
   IsNull,
+  Like,
   OptimisticLockVersionMismatchError,
   Repository,
 } from 'typeorm';
@@ -18,6 +19,7 @@ import { SysDept } from '@/system/dept/entities/dept.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserListDto } from './dto/user-list.dto';
 import * as bcrypt from 'bcryptjs';
 import { SysRole } from '../role/entities/role.entity';
 import { ConfigService } from '@nestjs/config';
@@ -40,19 +42,80 @@ export class UserService {
     private readonly redisService: RedisService,
   ) {}
 
-  async list(): Promise<SysUser[]> {
-    let users: SysUser[] = [];
+  async list(userListDto: UserListDto): Promise<{
+    list: SysUser[];
+    total: number;
+  }> {
     try {
-      users = await this.userRepository.find({
-        relations: {
-          dept: true,
-          roles: true,
-        },
-      });
+      const { pageNum, pageSize, account, sex, status, sortField, sortOrder } = userListDto;
+
+      // 构建查询条件
+      const where = this.buildWhereCondition({ account, sex, status });
+
+      // 构建排序条件
+      const order: Record<string, 'ASC' | 'DESC'> = {};
+      const validSortFields = ['account', 'createTime', 'updateTime'];
+      if (sortField && validSortFields.includes(sortField)) {
+        order[sortField] = sortOrder === 'asc' ? 'ASC' : 'DESC';
+      } else {
+        // 默认按创建时间倒序
+        order.createTime = 'DESC';
+      }
+
+      // 判断是否分页
+      const isPaginated = pageNum !== undefined && pageSize !== undefined;
+
+      // 执行查询
+      if (isPaginated) {
+        // 分页查询
+        const [list, total] = await this.userRepository.findAndCount({
+          skip: pageNum * pageSize,
+          take: pageSize,
+          where,
+          order,
+          relations: {
+            dept: true,
+            roles: true,
+          },
+        });
+        return { list, total };
+      } else {
+        // 查询全部
+        const list = await this.userRepository.find({
+          where,
+          order,
+          relations: {
+            dept: true,
+            roles: true,
+          },
+        });
+        return { list, total: list.length };
+      }
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
     }
-    return users;
+  }
+
+  private buildWhereCondition(filters: {
+    account?: string;
+    sex?: string;
+    status?: string[];
+  }) {
+    const where: any = {};
+
+    if (filters.account) {
+      where.account = Like(`%${filters.account}%`);
+    }
+
+    if (filters.sex && filters.sex !== '') {
+      where.sex = filters.sex;
+    }
+
+    if (filters.status && filters.status.length > 0) {
+      where.status = In(filters.status);
+    }
+
+    return where;
   }
 
   async get(id: string) {

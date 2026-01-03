@@ -1,12 +1,14 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { OptimisticLockVersionMismatchError, Repository } from 'typeorm';
+import { Like, OptimisticLockVersionMismatchError, Repository } from 'typeorm';
 import { SysDict } from './entities/dict.entity';
 import { SysDictData } from './entities/dict-data.entity';
 import { CreateDictTypeDto } from './dto/create-dict-type.dto';
 import { UpdateDictTypeDto } from './dto/update-dict-type.dto';
 import { CreateDictDataDto } from './dto/create-dict-data.dto';
 import { UpdateDictDataDto } from './dto/update-dict-data.dto';
+import { DictListDto } from './dto/dict-list.dto';
+import { DictDataListDto } from './dto/dict-data-list.dto';
 import { RedisService } from '@/common/redis/redis.service';
 import { removeUndefined } from '@/common/utils/remove-undefined.util';
 
@@ -23,42 +25,127 @@ export class DictService {
   ) {}
 
   // 已更新
-  async list(): Promise<SysDict[]> {
+  async list(dictListDto: DictListDto): Promise<{
+    list: SysDict[];
+    total: number;
+  }> {
     try {
-      return await this.dictRepository.find({
-        order: { sortOrder: 'ASC', createTime: 'DESC' },
-      });
+      const { pageNum, pageSize, name, type, status, sortField, sortOrder } = dictListDto;
+
+      // 构建查询条件
+      const where = this.buildWhereCondition({ name, type, status });
+
+      // 构建排序条件
+      let order: Record<string, 'ASC' | 'DESC'> = { sortOrder: 'ASC', createTime: 'DESC' };
+      const validSortFields = ['name', 'type', 'sortOrder', 'createTime'];
+      if (sortField && validSortFields.includes(sortField)) {
+        order = { [sortField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
+      }
+
+      // 判断是否分页
+      const isPaginated = pageNum !== undefined && pageSize !== undefined;
+
+      // 执行查询
+      if (isPaginated) {
+        // 分页查询
+        const [list, total] = await this.dictRepository.findAndCount({
+          skip: pageNum * pageSize,
+          take: pageSize,
+          where,
+          order,
+        });
+        return { list, total };
+      } else {
+        // 查询全部
+        const list = await this.dictRepository.find({
+          where,
+          order,
+        });
+        return { list, total: list.length };
+      }
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
     }
   }
 
-  // 已更新
-  async dataList(id: string | undefined, type: string): Promise<SysDictData[]> {
-    if (type) {
-      const cacheKey = `${DICT_DATA_CACHE_KEY_PREFIX}${type}`;
-      const cached = await this.redisService.get<SysDictData[]>(cacheKey);
-      if (cached) return cached;
+  private buildWhereCondition(filters: {
+    name?: string;
+    type?: string;
+    status?: string;
+  }) {
+    const where: any = {};
+
+    if (filters.name) {
+      where.name = Like(`%${filters.name}%`);
     }
-    let dict: SysDict | null = null;
+
+    if (filters.type) {
+      where.type = Like(`%${filters.type}%`);
+    }
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    return where;
+  }
+
+  // 已更新
+  async dataList(
+    dictDataListDto: DictDataListDto,
+    type: string,
+  ): Promise<{
+    list: SysDictData[];
+    total: number;
+  }> {
+    // 如果有类型过滤，不需要缓存（因为分页参数多变）
     try {
-      dict = await this.dictRepository.findOne({
-        where: id ? { id, type } : { activeType: type },
-        relations: { dictData: true },
-      });
+      const { pageNum, pageSize, label, status, sortField, sortOrder } = dictDataListDto;
+
+      // 构建查询条件
+      const where: any = { dict: { type } };
+
+      if (label) {
+        where.label = Like(`%${label}%`);
+      }
+
+      if (status) {
+        where.status = status;
+      }
+
+      // 构建排序条件
+      let order: Record<string, 'ASC' | 'DESC'> = { sortOrder: 'ASC' };
+      const validSortFields = ['label', 'sortOrder', 'createTime'];
+      if (sortField && validSortFields.includes(sortField)) {
+        order = { [sortField]: sortOrder === 'asc' ? 'ASC' : 'DESC' };
+      }
+
+      // 判断是否分页
+      const isPaginated = pageNum !== undefined && pageSize !== undefined;
+
+      // 执行查询
+      if (isPaginated) {
+        // 分页查询
+        const [list, total] = await this.dictDataRepository.findAndCount({
+          skip: pageNum * pageSize,
+          take: pageSize,
+          where,
+          order,
+          relations: { dict: true },
+        });
+        return { list, total };
+      } else {
+        // 查询全部
+        const list = await this.dictDataRepository.find({
+          where,
+          order,
+          relations: { dict: true },
+        });
+        return { list, total: list.length };
+      }
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
     }
-    if (!dict) {
-      throw new BadRequestException({ msg: '字典不存在', code: 400 });
-    }
-
-    this.redisService.set(
-      `${DICT_DATA_CACHE_KEY_PREFIX}${dict.type}`,
-      dict.dictData,
-    );
-
-    return dict.dictData;
   }
 
   // 已更新
@@ -86,7 +173,8 @@ export class DictService {
         where: { type: type, status: '1' },
       });
     } catch (e: any) {
-      throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
+      throw new Error(e);
+      // throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
     }
     if (!dict) {
       throw new BadRequestException({ msg: '字典类型不存在', code: 400 });

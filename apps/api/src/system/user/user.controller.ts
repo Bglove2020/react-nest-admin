@@ -11,6 +11,7 @@ import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ResetUserPasswordDto } from './dto/reset-user-password.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserListDto } from './dto/user-list.dto';
 import { LoggingService } from '@/common/logging/logging.service';
 import { Public } from '@/auth/public.decorator';
 import { RequirePerms } from '@/auth/decorators/perms.decorator';
@@ -26,20 +27,28 @@ export class UserController {
 
   @RequirePerms('system:user:list')
   @Get('list')
-  async list(): Promise<{
+  async list(@Query() query: UserListDto): Promise<{
     code: number;
     msg: string;
-    data: FrontendUser[];
+    data: {
+      list: FrontendUser[];
+      total: number;
+    };
   }> {
-    this.loggingService.log('GET /system/user/list');
-    const users = await this.userService.list();
+    this.loggingService.log('GET /system/user/list', {
+      params: query,
+    });
+    const { list, total } = await this.userService.list(query);
     this.loggingService.log('GET /system/user/list success', {
-      responseDescriptor: { type: 'list', count: users.length },
+      responseDescriptor: { type: 'list', count: list.length, total },
     });
     return {
       code: 200,
       msg: '用户列表获取成功',
-      data: toFrontendListDtos(users),
+      data: {
+        list: toFrontendListDtos(list),
+        total,
+      },
     };
   }
 

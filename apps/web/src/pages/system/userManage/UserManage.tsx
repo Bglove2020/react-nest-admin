@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Input } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
 import { SingleSelect } from "@/components/Select/single-select";
@@ -48,25 +48,29 @@ type user = {
   roleIds?: string[];
 };
 
-// 将 filters 转换为 { id, value } 对象数组
-const extractFilterEntries = (filters: Filters) => {
-  return Object.entries(filters).map(([key, val]) => ({
-    id: key,
-    value: val,
-  }));
-};
-
 export default function UserManage() {
-  // alert('设备宽度:'+window.innerWidth+'设备高度:'+window.innerHeight)
   const [filters, setFilters] = useState<Filters>({
     account: "",
     sex: "",
     status: [],
   });
 
-  // const [loading, setLoading] = useState(false);
   const [data, setData] = useState<user[]>([]);
+  const [total, setTotal] = useState(0);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  // 排序状态
+  const [sort, setSort] = useState<{
+    sortField: string | null;
+    sortOrder: "asc" | "desc" | null;
+  }>({
+    sortField: null,
+    sortOrder: null,
+  });
 
   // 控制操作列弹窗（可编程开关）
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
@@ -76,28 +80,62 @@ export default function UserManage() {
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [isCreate, setIsCreate] = useState(true);
 
-  const loadUsers = useCallback(() => {
-    axiosClient
-      .get<{ data: user[] }>("/system/user/list")
-      .then((res) => {
-        console.log(res.data.data);
-        setData(res.data.data);
-      })
-      .catch((e) => {
-        toast.error(String(e));
-      });
-  }, []);
+  const loadUsers = useCallback(async () => {
+    try {
+      const params = {
+        pageNum: pagination.pageIndex,
+        pageSize: pagination.pageSize,
+        account: filters.account || undefined,
+        sex: filters.sex || undefined,
+        status: filters.status.length > 0 ? filters.status : undefined,
+        sortField: sort.sortField || undefined,
+        sortOrder: sort.sortOrder || undefined,
+      };
+
+      const res = await axiosClient.get<{
+        code: number;
+        msg: string;
+        data: { list: user[]; total: number };
+      }>("/system/user/list", { params });
+
+      setData(res.data.data.list);
+      setTotal(res.data.data.total);
+    } catch (e) {
+      toast.error(String(e));
+    }
+  }, [pagination, filters, sort]);
 
   const deleteUser = useCallback(async () => {
-    return await axiosClient.delete(
-      `/system/user/delete/${activeUser?.id}`,
-    );
+    return await axiosClient.delete(`/system/user/delete/${activeUser?.id}`);
   }, [activeUser]);
 
+  // 监听分页和过滤参数变化，自动加载数据（带防抖）
   useEffect(() => {
-    // 初始加载
-    loadUsers();
+    const timer = setTimeout(() => {
+      loadUsers();
+    }, 300); // 防抖 300ms
+    return () => clearTimeout(timer);
   }, [loadUsers]);
+
+  // 处理排序
+  const handleSort = (columnId: string) => {
+    setSort((prev) => {
+      // 如果点击的是当前排序字段，切换排序方向
+      if (prev.sortField === columnId) {
+        if (prev.sortOrder === "asc") {
+          return { sortField: columnId, sortOrder: "desc" };
+        } else if (prev.sortOrder === "desc") {
+          return { sortField: null, sortOrder: null }; // 取消排序
+        }
+      }
+
+      // 新字段排序，默认升序
+      return { sortField: columnId, sortOrder: "asc" };
+    });
+
+    // 排序后重置到第一页
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   // 获取状态
   const statusList = useDictDataByTypeQuery("status").data ?? [];
@@ -159,6 +197,7 @@ export default function UserManage() {
       accessorKey: "account",
       header: "账号",
       cell: ({ row }) => row.getValue("account"),
+      enableSorting: true, // ✅ 启用排序
     },
     {
       accessorKey: "email",
@@ -212,6 +251,7 @@ export default function UserManage() {
     {
       id: "actions",
       header: "操作",
+      enableSorting: false, // ❌ 禁用排序
       enableHiding: false,
       cell: ({ row }) => {
         return (
@@ -252,7 +292,7 @@ export default function UserManage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* 注意：不要在每一行的 cell 中渲染弹窗组件，否则会出现多层弹窗 */}
+            {/* 注意：不要在每一行的 cell 中渲染弹窗组件，��则会出现多层弹窗 */}
           </>
         );
       },
@@ -289,7 +329,6 @@ export default function UserManage() {
 
         {/* 多选（DropdownMenu + checkbox） */}
         <div className="flex w-full max-w-[300px] items-center gap-2">
-          {/* <Label htmlFor="school" className="shrink-0 w-20 text-base text-neutral-800">学校多选：</Label> */}
           <MultiSelect
             options={statusList}
             value={filters.status}
@@ -301,15 +340,6 @@ export default function UserManage() {
       </div>
 
       <div className="flex flex-wrap items-center justify-start gap-2">
-        {/* <Button variant="outline">
-          <span>导入</span>
-          <Import />
-        </Button>
-        <Button variant="outline">
-          <span>导出</span>
-          <Download />
-        </Button> */}
-
         <Permission permission="system:user:create">
           <Button
             variant="outline"
@@ -344,9 +374,13 @@ export default function UserManage() {
 
       <div className="w-full">
         <DataTable
-          filters={extractFilterEntries(filters)}
           data={data}
           columns={columns}
+          total={total}
+          pagination={pagination}
+          onPaginationChange={setPagination}
+          sort={sort}
+          onSort={handleSort}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
         />

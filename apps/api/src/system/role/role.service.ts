@@ -1,8 +1,9 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, OptimisticLockVersionMismatchError, Repository } from 'typeorm';
+import { In, Like, OptimisticLockVersionMismatchError, Repository } from 'typeorm';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
+import { RoleListDto } from './dto/role-list.dto';
 import { SysRole } from './entities/role.entity';
 import { SysMenu } from '../menu/entities/menu.entity';
 import { SysUser } from '../user/entities/user.entity';
@@ -58,39 +59,100 @@ export class RoleService {
     }
   }
 
-  async list() {
-    // 1. 尝试从缓存获取
-    const cachedList = await this.redisService.get<any[]>(
-      this.ROLE_LIST_CACHE_KEY,
-    );
-    if (cachedList) {
-      return cachedList;
-    }
-
+  async list(roleListDto: RoleListDto): Promise<{
+    list: SysRole[];
+    total: number;
+  }> {
     try {
-      const list = await this.roleRepository.find({
-        relations: {
-          menus: true,
-        },
-        select: {
-          id: true,
-          name: true,
-          roleKey: true,
-          sortOrder: true,
-          status: true,
-          menus: {
-            id: true,
+      const { pageNum, pageSize, name, roleKey, status, sortField, sortOrder } = roleListDto;
+
+      // 构建查询条件
+      const where = this.buildWhereCondition({ name, roleKey, status });
+
+      // 构建排序条件
+      const order: Record<string, 'ASC' | 'DESC'> = {};
+      const validSortFields = ['name', 'roleKey', 'sortOrder', 'createTime'];
+      if (sortField && validSortFields.includes(sortField)) {
+        order[sortField] = sortOrder === 'asc' ? 'ASC' : 'DESC';
+      } else {
+        // 默认按排序字段升序
+        order.sortOrder = 'ASC';
+      }
+
+      // 判断是否分页
+      const isPaginated = pageNum !== undefined && pageSize !== undefined;
+
+      // 执行查询
+      if (isPaginated) {
+        // 分页查询
+        const [list, total] = await this.roleRepository.findAndCount({
+          skip: pageNum * pageSize,
+          take: pageSize,
+          where,
+          order,
+          relations: {
+            menus: true,
           },
-        },
-      });
-
-      // 2. 写入缓存 (过期时间 1 小时)
-      await this.redisService.set(this.ROLE_LIST_CACHE_KEY, list, 3600);
-
-      return list;
+          select: {
+            id: true,
+            name: true,
+            roleKey: true,
+            sortOrder: true,
+            status: true,
+            remark: true,
+            menus: {
+              id: true,
+            },
+          },
+        });
+        return { list, total };
+      } else {
+        // 查询全部
+        const list = await this.roleRepository.find({
+          where,
+          order,
+          relations: {
+            menus: true,
+          },
+          select: {
+            id: true,
+            name: true,
+            roleKey: true,
+            sortOrder: true,
+            status: true,
+            remark: true,
+            menus: {
+              id: true,
+            },
+          },
+        });
+        return { list, total: list.length };
+      }
     } catch (e: any) {
       throw new BadRequestException({ msg: '数据库查询错误', code: 400 });
     }
+  }
+
+  private buildWhereCondition(filters: {
+    name?: string;
+    roleKey?: string;
+    status?: string;
+  }) {
+    const where: any = {};
+
+    if (filters.name) {
+      where.name = Like(`%${filters.name}%`);
+    }
+
+    if (filters.roleKey) {
+      where.roleKey = Like(`%${filters.roleKey}%`);
+    }
+
+    if (filters.status) {
+      where.status = filters.status;
+    }
+
+    return where;
   }
 
   async update(updateRoleDto: UpdateRoleDto) {
