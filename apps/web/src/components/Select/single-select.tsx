@@ -56,7 +56,7 @@ export function SingleSelect({
       <div className={`w-full flex justify-between items-center ${className}`}>
       <SelectTrigger
         hasValue={!value || !canClear}
-        className={`w-full relative ${canClear && value ? '[&>svg:last-child]:hidden' : ''}`}
+        className={`w-full relative font-normal ${canClear && value ? '[&>svg:last-child]:hidden' : ''}`}
       >
         <SelectValue placeholder={placeholder || "Select a fruit"} />
 

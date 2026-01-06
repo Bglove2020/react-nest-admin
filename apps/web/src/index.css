@@ -193,3 +193,36 @@
     0 4px 20px oklch(0 0 0 / 30%),
     0 1px 4px oklch(0 0 0 / 18%);
 }
+
+/* 统一筛选组件样式 */
+/* 强制所有筛选组件使用相同的字体渲染 */
+
+.filter-item input,
+.filter-item button,
+.filter-item [data-slot="select-trigger"] {
+  font-family: "Noto Sans Variable", sans-serif !important;
+  font-size: 14px !important;
+  font-weight: 400 !important;
+  line-height: 1.5 !important;
+  letter-spacing: normal !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+}
+
+/* Input 的 placeholder 颜色 - 使用与普通文字相同的颜色 */
+.filter-item input::placeholder {
+  color: oklch(0.551 0.027 264.364) !important;
+  opacity: 1 !important;
+}
+
+/* 确保 Select 组件的 placeholder 颜色一致 */
+.filter-item [data-placeholder],
+.filter-item [data-placeholder="true"] {
+  color: oklch(0.551 0.027 264.364) !important;
+}
+
+/* 确保 MultiSelect 的 placeholder 颜色一致 */
+.filter-item .placeholder-shown,
+.filter-item .filter-placeholder {
+  color: oklch(0.551 0.027 264.364) !important;
+}

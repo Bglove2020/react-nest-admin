@@ -19,9 +19,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-  Skeleton,
 } from "@ruoyi/ui";
 import { SimplePagination } from "@/components/Table/simple-pagination";
+import DialogLoading from "@/components/Dialog/loading";
 
 type SortState = {
   sortField: string | null;
@@ -130,16 +130,7 @@ export function DataTable<T extends { id: string }>({
             ))}
           </TableHeader>
           <TableBody>
-            {loading ? (
-              // 骨架屏：单行通条 + pulse 动画
-              Array.from({ length: pagination.pageSize }).map((_, i) => (
-                <TableRow key={`skeleton-${i}`}>
-                  <TableCell colSpan={columns.length} className="p-3">
-                    <Skeleton className="h-5 w-full animate-pulse" />
-                  </TableCell>
-                </TableRow>
-              ))
-            ) : table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
@@ -176,6 +167,9 @@ export function DataTable<T extends { id: string }>({
             )}
           </TableBody>
         </Table>
+
+        {/* 毛玻璃加载遮罩 */}
+        {loading && <DialogLoading title="加载中..." />}
       </div>
 
       <SimplePagination

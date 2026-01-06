@@ -72,12 +72,12 @@ export function MultiSelect({
       <DropdownMenuTrigger asChild>
         <Button
           variant="outline"
-          className={`w-full px-3 ${className ?? ""}`}
+          className={`w-full px-3 font-normal ${className ?? ""}`}
           disabled={disabled}
         >
           <span className="flex w-full overflow-hidden items-center gap-1.5 text-left">
             {selectedLabels.length === 0 ? (
-              <span className="text-muted-foreground">{placeholder}</span>
+              <span className="text-muted-foreground placeholder-shown filter-placeholder">{placeholder}</span>
             ) : (
               <>
                 {selectedLabels.map((label) => (
@@ -97,7 +97,7 @@ export function MultiSelect({
           </div>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="min-w-[280px] max-w-[400px]">
+      <DropdownMenuContent className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[200px]">
         <div className="pt-2 px-2 pb-1">
           <Input
             value={query}
@@ -150,13 +150,13 @@ export function MultiSelect({
         
         <DropdownMenuSeparator />
         <div className="flex items-center gap-2 px-2 py-1.5">
-          <Button variant="outline" size="sm" className="text-xs" onClick={clearAll} disabled={value.length === 0}>
+          <Button variant="outline" size="sm" className="text-xs font-normal" onClick={clearAll} disabled={value.length === 0}>
             清空
           </Button>
-          <Button variant="outline" size="sm" className="text-xs" onClick={selectAllFiltered} disabled={filtered.length === 0}>
+          <Button variant="outline" size="sm" className="text-xs font-normal" onClick={selectAllFiltered} disabled={filtered.length === 0}>
             选择筛选结果
           </Button>
-          <Button variant="outline" size="sm" className="text-xs" onClick={clearFiltered} disabled={filtered.length === 0}>
+          <Button variant="outline" size="sm" className="text-xs font-normal" onClick={clearFiltered} disabled={filtered.length === 0}>
             清空筛选结果
           </Button>
         </div>
