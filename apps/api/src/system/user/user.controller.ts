@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Query,
+  Req,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -27,7 +28,10 @@ export class UserController {
 
   @RequirePerms('system:user:list')
   @Get('list')
-  async list(@Query() query: UserListDto): Promise<{
+  async list(
+    @Query() query: UserListDto,
+    @Req() req: any,
+  ): Promise<{
     code: number;
     msg: string;
     data: {
@@ -35,6 +39,13 @@ export class UserController {
       total: number;
     };
   }> {
+    // --- 测试代码开始 ---
+    console.log('=== [Express Raw Query] ===');
+    console.log(req.query); // 这是 Express 经过 qs 解析后的原始对象
+
+    console.log('=== [NestJS/Zod DTO Query] ===');
+    console.log(query); // 这是经过 Zod 验证和转换后的 DTO 实例
+    // --- 测试代码结束 ---
     this.loggingService.log('GET /system/user/list', {
       params: query,
     });

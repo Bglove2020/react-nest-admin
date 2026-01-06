@@ -47,7 +47,8 @@ export class UserService {
     total: number;
   }> {
     try {
-      const { pageNum, pageSize, account, sex, status, sortField, sortOrder } = userListDto;
+      const { pageNum, pageSize, account, sex, status, sortField, sortOrder } =
+        userListDto;
 
       // 构建查询条件
       const where = this.buildWhereCondition({ account, sex, status });
@@ -115,6 +116,7 @@ export class UserService {
       where.status = In(filters.status);
     }
 
+    console.log('where', where);
     return where;
   }
 

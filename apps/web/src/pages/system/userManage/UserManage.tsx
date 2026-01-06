@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Input } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
 import { SingleSelect } from "@/components/Select/single-select";
@@ -29,7 +29,7 @@ import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import { DialogMultiDeleteConfirm } from "@/components/Dialog/multi-delete-confirm";
 import { Switch } from "@ruoyi/ui";
 import { Permission } from "@/hooks/usePermission";
-import { useDictDataByTypeQuery } from "@/lib/dictQueries";
+import { useDictDataByTypeQuery, dictDataToOptions } from "@/lib/dictQueries";
 
 type Filters = {
   account: string;
@@ -57,6 +57,8 @@ export default function UserManage() {
 
   const [data, setData] = useState<user[]>([]);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [pagination, setPagination] = useState({
     pageIndex: 0,
@@ -80,30 +82,48 @@ export default function UserManage() {
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [isCreate, setIsCreate] = useState(true);
 
-  const loadUsers = useCallback(async () => {
-    try {
-      const params = {
-        pageNum: pagination.pageIndex,
-        pageSize: pagination.pageSize,
-        account: filters.account || undefined,
-        sex: filters.sex || undefined,
-        status: filters.status.length > 0 ? filters.status : undefined,
-        sortField: sort.sortField || undefined,
-        sortOrder: sort.sortOrder || undefined,
-      };
+  const loadUsers = useCallback(
+    async (addLoading: boolean = true) => {
+      // 取消上一次请求
+      abortRef.current?.abort();
+      abortRef.current = new AbortController();
+      if (addLoading) {
+        setLoading(true);
+        await new Promise((resolve) => setTimeout(resolve, 300));
+      }
+      try {
+        const params = {
+          pageNum: pagination.pageIndex,
+          pageSize: pagination.pageSize,
+          account: filters.account || undefined,
+          sex: filters.sex || undefined,
+          status: filters.status.length > 0 ? filters.status : undefined,
+          sortField: sort.sortField || undefined,
+          sortOrder: sort.sortOrder || undefined,
+        };
 
-      const res = await axiosClient.get<{
-        code: number;
-        msg: string;
-        data: { list: user[]; total: number };
-      }>("/system/user/list", { params });
+        const res = await axiosClient.get<{
+          code: number;
+          msg: string;
+          data: { list: user[]; total: number };
+        }>("/system/user/list", {
+          params,
+          signal: abortRef.current.signal,
+        });
 
-      setData(res.data.data.list);
-      setTotal(res.data.data.total);
-    } catch (e) {
-      toast.error(String(e));
-    }
-  }, [pagination, filters, sort]);
+        setData(res.data.data.list);
+        setTotal(res.data.data.total);
+      } catch (e) {
+        // 忽略被取消的请求
+        if ((e as Error).name !== "AbortError") {
+          toast.error(String(e));
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [pagination, filters, sort],
+  );
 
   const deleteUser = useCallback(async () => {
     return await axiosClient.delete(`/system/user/delete/${activeUser?.id}`);
@@ -111,9 +131,10 @@ export default function UserManage() {
 
   // 监听分页和过滤参数变化，自动加载数据（带防抖）
   useEffect(() => {
+    setLoading(true);
     const timer = setTimeout(() => {
-      loadUsers();
-    }, 300); // 防抖 300ms
+      loadUsers(false);
+    }, 500);
     return () => clearTimeout(timer);
   }, [loadUsers]);
 
@@ -137,10 +158,21 @@ export default function UserManage() {
     setPagination((prev) => ({ ...prev, pageIndex: 0 }));
   };
 
-  // 获取状态
-  const statusList = useDictDataByTypeQuery("status").data ?? [];
-  // 获取性别列表
-  const sexList = useDictDataByTypeQuery("sex").data ?? [];
+  // 获取状态列表（转换为选项格式）
+  const statusList = dictDataToOptions(
+    useDictDataByTypeQuery("status").data ?? [],
+  );
+  // 获取性别列表（转换为选项格式）
+  const sexList = dictDataToOptions(useDictDataByTypeQuery("sex").data ?? []);
+
+  // 统一的筛选处理函数，同时重置分页
+  const handleFilterChange = <K extends keyof Filters>(
+    key: K,
+    value: Filters[K],
+  ) => {
+    setFilters((f) => ({ ...f, [key]: value }));
+    setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+  };
 
   const openResetDialogFor = (u: user) => {
     setActiveUser(u);
@@ -309,9 +341,7 @@ export default function UserManage() {
             id="search"
             placeholder="输入关键字"
             value={filters.account}
-            onChange={(e) =>
-              setFilters((f) => ({ ...f, account: e.target.value }))
-            }
+            onChange={(e) => handleFilterChange("account", e.target.value)}
             className="w-full py-2 text-sm"
           />
         </div>
@@ -323,7 +353,7 @@ export default function UserManage() {
             options={sexList}
             value={filters.sex}
             label="性别"
-            onChange={(v) => setFilters((f) => ({ ...f, sex: v }))}
+            onChange={(v) => handleFilterChange("sex", v)}
           />
         </div>
 
@@ -332,7 +362,7 @@ export default function UserManage() {
           <MultiSelect
             options={statusList}
             value={filters.status}
-            onChange={(v) => setFilters((f) => ({ ...f, status: v }))}
+            onChange={(v) => handleFilterChange("status", v)}
             placeholder="请选择状态"
             searchPlaceholder="搜索状态..."
           />
@@ -383,6 +413,7 @@ export default function UserManage() {
           onSort={handleSort}
           rowSelection={rowSelection}
           onRowSelectionChange={setRowSelection}
+          loading={loading}
         />
       </div>
 

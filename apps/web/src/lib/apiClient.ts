@@ -164,5 +164,5 @@ axiosClient.interceptors.response.use(
       toast.error(message || "请求失败");
     }
     return Promise.reject(error);
-  }
+  },
 );
