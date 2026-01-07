@@ -26,12 +26,14 @@ import { MultiSelectDropdown } from "@/components/Select/multi-select-dropdown";
 
 // 前端专用的用户创建表单 schema
 // 基于 userCreateSchema 扩展，添加确认密码字段
-const userCreateFormSchema = userCreateSchema.extend({
-  confirmPassword: passwordSchema,
-}).refine((data) => data.password === data.confirmPassword, {
-  message: passwordMismatchMessage,
-  path: ["confirmPassword"],
-});
+const userCreateFormSchema = userCreateSchema
+  .extend({
+    confirmPassword: passwordSchema,
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: passwordMismatchMessage,
+    path: ["confirmPassword"],
+  });
 
 import { Field, FieldGroup, FieldLabel, FieldError } from "@ruoyi/ui";
 import { useForm, Controller } from "react-hook-form";
@@ -147,7 +149,7 @@ export function UserDialog({
   useEffect(() => {
     axiosClient.get("/system/role/list").then((res) => {
       setRoleList(
-        res.data.data.map((role: any) => ({
+        res.data.data.list.map((role: any) => ({
           label: role.name,
           value: role.id,
         })),
@@ -174,7 +176,7 @@ export function UserDialog({
 
       // 如果是创建用户，移除 confirmPassword 字段
       let submitData: any = data;
-      if (isCreate && 'confirmPassword' in data) {
+      if (isCreate && "confirmPassword" in data) {
         const { confirmPassword, ...payload } = data as any;
         submitData = payload;
       }

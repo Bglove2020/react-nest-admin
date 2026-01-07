@@ -41,7 +41,11 @@ function formatLogEntry(log: Record<string, any>): string {
     output += ` [userId:${userId}]`;
   }
   if (query) {
-    output += `\n[query:\n${query}\n]`;
+    // 如果 query 是对象，需要序列化为 JSON；如果是字符串则直接使用
+    const queryStr = typeof query === 'object' 
+      ? JSON.stringify(query, null, 2) 
+      : query;
+    output += `\n[query:\n${queryStr}\n]`;
   }
 
   // 如果有额外属性，以格式化的 JSON 展示

@@ -1,5 +1,5 @@
 import { Module, MiddlewareConsumer, NestModule } from '@nestjs/common';
-import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
 import { APP_FILTER } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RbacGuard } from './auth/guards/rbac.guard';
@@ -35,6 +35,7 @@ import { SysMenu } from './system/menu/entities/menu.entity';
 import { DictModule } from './system/dict/dict.module';
 import { SysDict } from './system/dict/entities/dict.entity';
 import { SysDictData } from './system/dict/entities/dict-data.entity';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 @Module({
   imports: [
@@ -134,6 +135,7 @@ import { SysDictData } from './system/dict/entities/dict-data.entity';
     { provide: APP_GUARD, useClass: JwtAuthGuard },
     { provide: APP_GUARD, useClass: RbacGuard },
     { provide: APP_PIPE, useClass: ZodValidationPipe },
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
     RequestContextMiddleware,
     { provide: APP_FILTER, useClass: AllExceptionsFilter },
     DatabaseSeedService,
