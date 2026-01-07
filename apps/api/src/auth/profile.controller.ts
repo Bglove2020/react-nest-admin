@@ -1,50 +1,41 @@
 import { Controller, Get } from '@nestjs/common';
 import { ProfileService } from './profile.service';
-import { LoggingService } from '@/common/logging/logging.service';
 import type { UserInfo, SideBarItem, UserRouterItem } from '@ruoyi/contracts';
 
 @Controller()
 export class ProfileController {
-  constructor(
-    private readonly profileService: ProfileService,
-    private readonly loggingService: LoggingService,
-  ) {}
+  constructor(private readonly profileService: ProfileService) {}
 
   @Get('getInfo')
-  async getInfo(): Promise<{ code: number; msg: string; data: UserInfo }> {
-    this.loggingService.log('GET /getInfo');
+  async getInfo() {
     const data = await this.profileService.getInfo();
-    this.loggingService.log('GET /getInfo success', {
-      responseDescriptor: { data: data },
-    });
-    return { code: 200, msg: '获取成功', data };
+    return {
+      code: 200,
+      msg: '获取成功',
+      data,
+      logdata: { userId: data.user.id, userName: data.user.name },
+    };
   }
 
   @Get('getRouters')
-  async getRouters(): Promise<{
-    code: number;
-    msg: string;
-    data: UserRouterItem[];
-  }> {
-    this.loggingService.log('GET /getRouters');
+  async getRouters() {
     const data = await this.profileService.getRouters();
-    this.loggingService.log('GET /getRouters success', {
-      responseDescriptor: { type: 'list', data: data },
-    });
-    return { code: 200, msg: '获取成功', data };
+    return {
+      code: 200,
+      msg: '获取成功',
+      data,
+      logdata: { count: data.length },
+    };
   }
 
   @Get('getSideBarMenus')
-  async getSideBarMenus(): Promise<{
-    code: number;
-    msg: string;
-    data: SideBarItem[];
-  }> {
-    this.loggingService.log('GET /getSideBarMenus');
+  async getSideBarMenus() {
     const data = await this.profileService.getSideBarMenus();
-    this.loggingService.log('GET /getSideBarMenus success', {
-      responseDescriptor: { type: 'list', data: data },
-    });
-    return { code: 200, msg: '获取成功', data };
+    return {
+      code: 200,
+      msg: '获取成功',
+      data,
+      logdata: { count: data.length },
+    };
   }
 }

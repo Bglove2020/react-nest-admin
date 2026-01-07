@@ -11,74 +11,69 @@ import { MenuService } from './menu.service';
 import { CreateMenuDto } from './dto/create-menu.dto';
 import { UpdateMenuDto } from './dto/update-menu.dto';
 import type { FrontendMenu } from '@ruoyi/contracts';
-import { LoggingService } from '@/common/logging/logging.service';
 import { RequirePerms } from '@/auth/decorators/perms.decorator';
 
 @Controller('system/menu')
 export class MenuController {
-  constructor(
-    private readonly menuService: MenuService,
-    private readonly loggingService: LoggingService,
-  ) {}
+  constructor(private readonly menuService: MenuService) {}
 
   @RequirePerms('system:menu:add')
   @Post('create')
   async create(@Body() createMenuDto: CreateMenuDto) {
-    this.loggingService.log('POST /system/menu/create', {
-      requestDescriptor: { data: createMenuDto },
-    });
     await this.menuService.create(createMenuDto);
-    this.loggingService.log('POST /system/menu/create success');
-    return { code: 200, msg: '菜单创建成功', data: null };
+    return {
+      code: 200,
+      msg: '菜单创建成功',
+      data: null,
+      logdata: { menuName: createMenuDto.name },
+    };
   }
 
   @RequirePerms('system:menu:list')
   @Get('list')
-  async list(): Promise<{
-    code: number;
-    msg: string;
-    data: FrontendMenu[];
-  }> {
-    this.loggingService.log('GET /system/menu/list');
+  async list() {
     const data = await this.menuService.list();
-    this.loggingService.log('GET /system/menu/list success', {
-      responseDescriptor: { type: 'list', count: data.length },
-    });
-    return { code: 200, msg: '菜单列表获取成功', data };
+    return {
+      code: 200,
+      msg: '菜单列表获取成功',
+      data,
+      logdata: { count: data.length },
+    };
   }
 
   @RequirePerms('system:menu:query')
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    this.loggingService.log('GET /system/menu/:id', {
-      params: { id },
-    });
     const data = await this.menuService.get(id);
-    this.loggingService.log('GET /system/menu/:id success', {
-      responseDescriptor: { data: { id } },
-    });
-    return { code: 200, msg: '菜单获取成功', data };
+    return {
+      code: 200,
+      msg: '菜单获取成功',
+      data,
+      logdata: { menuId: id, menuName: data.name },
+    };
   }
 
   @RequirePerms('system:menu:update')
   @Post('update')
   async update(@Body() updateMenuDto: UpdateMenuDto) {
-    this.loggingService.log('POST /system/menu/update', {
-      requestDescriptor: { data: updateMenuDto },
-    });
     await this.menuService.update(updateMenuDto);
-    this.loggingService.log('POST /system/menu/update success');
-    return { code: 200, msg: '菜单更新成功', data: null };
+    return {
+      code: 200,
+      msg: '菜单更新成功',
+      data: null,
+      logdata: { menuId: updateMenuDto.id },
+    };
   }
 
   @RequirePerms('system:menu:delete')
   @Delete('delete')
   async delete(@Query('id') id: string) {
-    this.loggingService.log('DELETE /system/menu/delete', {
-      params: { id },
-    });
     await this.menuService.delete(id);
-    this.loggingService.log('DELETE /system/menu/delete success');
-    return { code: 200, msg: '菜单删除成功', data: null };
+    return {
+      code: 200,
+      msg: '菜单删除成功',
+      data: null,
+      logdata: { menuId: id },
+    };
   }
 }

@@ -1,42 +1,39 @@
-import { Body, Controller, Post, Res, Req, Get } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Post,
+  Res,
+  Req,
+  UnauthorizedException,
+} from '@nestjs/common';
 import type { Request, Response } from 'express';
 import { Public } from './public.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
-import { LoggingService } from '@/common/logging/logging.service';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private readonly authService: AuthService,
-    private readonly loggingService: LoggingService,
-  ) {}
+  constructor(private readonly authService: AuthService) {}
 
   @Public()
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
-    this.loggingService.log('POST /auth/register', {
-      requestDescriptor: { data: registerDto },
-    });
     await this.authService.register(registerDto);
-    this.loggingService.log('POST /auth/register success');
-    return { code: 200, msg: '注册成功', data: null };
+    return {
+      code: 200,
+      msg: '注册成功',
+      data: null,
+    };
   }
 
   @Public()
   @Post('login')
   async login(
+    @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Body() loginDto: LoginDto,
-    @Req() req: Request,
   ) {
-    this.loggingService.log('POST /auth/login', {
-      requestDescriptor: {
-        data: loginDto,
-        ip: req.ip,
-      },
-    });
     const { accessToken, refreshToken } =
       await this.authService.login(loginDto);
 
@@ -45,31 +42,38 @@ export class AuthController {
       path: 'api/auth/refresh',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7天
     });
-    this.loggingService.log('POST /auth/login success', {
-      responseDescriptor: { data: { accessToken } },
-    });
-    return { code: 200, msg: '登录成功', data: { accessToken } };
+
+    return {
+      code: 200,
+      msg: '登录成功',
+      data: { accessToken },
+      logdata: { account: loginDto.account, loginSuccess: true },
+    };
   }
 
   @Post('logout')
   async logout(@Res({ passthrough: true }) res: Response) {
-    this.loggingService.log('GET /auth/logout');
     res.setHeader('Set-Cookie', 'refresh_token=; HttpOnly; Path=/; Max-Age=0');
-    this.loggingService.log('GET /auth/logout success');
-    return { code: 200, msg: '退出成功', data: null };
+    return {
+      code: 200,
+      msg: '退出成功',
+      data: null,
+    };
   }
 
   @Public()
   @Post('refresh')
   async refresh(@Req() req: Request) {
     const refreshToken = req.cookies['refresh_token']?.replace('Bearer ', '');
-    this.loggingService.log('POST /auth/refresh', {
-      requestDescriptor: { data: { refreshToken } },
-    });
+    if (!refreshToken) {
+      throw new UnauthorizedException({ msg: '刷新令牌无效', code: 401 });
+    }
     const result = await this.authService.refresh(refreshToken);
-    this.loggingService.log('POST /auth/refresh success', {
-      responseDescriptor: { data: result },
-    });
-    return { code: 200, msg: '刷新令牌成功', data: result };
+    return {
+      code: 200,
+      msg: '刷新令牌成功',
+      data: result,
+      logdata: { refreshSuccess: true },
+    };
   }
 }
