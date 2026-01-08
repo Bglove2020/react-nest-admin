@@ -7,6 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import type { Request, Response } from 'express';
+import { ApiCode, type ApiResponse } from '@ruoyi/contracts';
 import { Public } from './public.decorator';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -18,10 +19,12 @@ export class AuthController {
 
   @Public()
   @Post('register')
-  async register(@Body() registerDto: RegisterDto) {
+  async register(
+    @Body() registerDto: RegisterDto,
+  ): Promise<ApiResponse<null>> {
     await this.authService.register(registerDto);
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg: '注册成功',
       data: null,
     };
@@ -33,7 +36,7 @@ export class AuthController {
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
     @Body() loginDto: LoginDto,
-  ) {
+  ): Promise<ApiResponse<{ accessToken: string }>> {
     const { accessToken, refreshToken } =
       await this.authService.login(loginDto);
 
@@ -44,18 +47,19 @@ export class AuthController {
     });
 
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg: '登录成功',
       data: { accessToken },
-      logdata: { account: loginDto.account, loginSuccess: true },
     };
   }
 
   @Post('logout')
-  async logout(@Res({ passthrough: true }) res: Response) {
+  async logout(
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<ApiResponse<null>> {
     res.setHeader('Set-Cookie', 'refresh_token=; HttpOnly; Path=/; Max-Age=0');
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg: '退出成功',
       data: null,
     };
@@ -63,17 +67,19 @@ export class AuthController {
 
   @Public()
   @Post('refresh')
-  async refresh(@Req() req: Request) {
+  async refresh(@Req() req: Request): Promise<ApiResponse<{ accessToken: string }>> {
     const refreshToken = req.cookies['refresh_token']?.replace('Bearer ', '');
     if (!refreshToken) {
-      throw new UnauthorizedException({ msg: '刷新令牌无效', code: 401 });
+      throw new UnauthorizedException({
+        msg: '刷新令牌无效',
+        code: ApiCode.UNAUTHORIZED,
+      });
     }
     const result = await this.authService.refresh(refreshToken);
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg: '刷新令牌成功',
       data: result,
-      logdata: { refreshSuccess: true },
     };
   }
 }

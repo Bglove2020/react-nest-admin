@@ -26,7 +26,7 @@ import {
 import FormDialog from "@/pages/system/menuManage/dialog/Form";
 import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import { useDictDataByTypeQuery } from "@/lib/dictQueries";
-import type { FrontendMenu } from "@ruoyi/contracts";
+import { ApiCode, type ApiResponse, type FrontendMenu } from "@ruoyi/contracts";
 
 // 筛选条件
 type Filters = {
@@ -59,7 +59,7 @@ export default function MenuManage() {
 
   const loadMenus = useCallback(() => {
     axiosClient
-      .get<{ data: FrontendMenu[] }>("/system/menu/list")
+      .get<ApiResponse<FrontendMenu[]>>("/system/menu/list")
       .then((res) => {
         setData(res.data.data);
       });
@@ -75,7 +75,7 @@ export default function MenuManage() {
 
   const statusList = useDictDataByTypeQuery("status").data ?? [];
 
-  const columns: ColumnDef<FrontendMenu, any>[] = [
+  const columns: ColumnDef<FrontendMenu, unknown>[] = [
     {
       accessorKey: "sortOrder",
       header: "顺序",
@@ -146,7 +146,7 @@ export default function MenuManage() {
                 status: checked ? "1" : "0",
               })
               .then((res) => {
-                if (res.data.code === 200) {
+                if (res.data.code === ApiCode.SUCCESS) {
                   toast.success(res.data.msg);
                   loadMenus();
                 } else {
@@ -154,7 +154,7 @@ export default function MenuManage() {
                 }
               })
               .catch((err) => {
-                toast.error(err.response.data.msg);
+                toast.error(err?.response?.data?.msg || err?.message || "更新失败");
               });
           }}
         />

@@ -12,6 +12,7 @@ import { useState } from "react"
 import { axiosClient } from "@/lib/apiClient"
 import { Loader2 } from "lucide-react"
 import { toast } from 'sonner'
+import { ApiCode } from "@ruoyi/contracts"
 import qs from 'qs'
 
 export function DialogMultiDeleteConfirm({
@@ -36,7 +37,7 @@ export function DialogMultiDeleteConfirm({
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       const res = await axiosClient.delete(`system/user/delete-by-accounts?${qs.stringify({ "accounts": accounts }, { arrayFormat: 'repeat' })}`);
-      if (res.data?.code === 200) {
+      if (res.data?.code === ApiCode.SUCCESS) {
         if(accounts.length <=2) {
           toast.success(`${accounts.join("、")} 删除成功！`);
         }

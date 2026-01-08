@@ -11,6 +11,7 @@ import type {
   VisibilityState,
   OnChangeFn,
   RowSelectionState,
+  HeaderContext,
 } from "@tanstack/react-table";
 import {
   Table,
@@ -41,7 +42,7 @@ export function DataTable<T extends { id: string }>({
   loading = false,
 }: {
   data: T[];
-  columns: ColumnDef<T, any>[];
+  columns: ColumnDef<T, unknown>[];
   total: number;
   pagination: { pageIndex: number; pageSize: number };
   onPaginationChange: (pagination: {
@@ -57,16 +58,14 @@ export function DataTable<T extends { id: string }>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
 
-  const table = useReactTable({
-    data,
-    columns: columns.map((col) => ({
-      ...col,
-      // 添加排序指示器到 header
-      header: (context: any) => {
-        const columnId = (col.id || col.accessorKey) as string;
+  const resolvedColumns = React.useMemo(
+    () =>
+      columns.map((col) => ({
+        ...col,
+        header: (context: HeaderContext<T, unknown>) => {
+        const accessorKey = "accessorKey" in col ? col.accessorKey : undefined;
+        const columnId = String(col.id ?? accessorKey ?? "");
         const isSorted = sort.sortField === columnId;
-
-        // 默认不可排序，需要显式启用
         const isSortable = col.enableSorting === true;
 
         const headerContent = col.header
@@ -89,7 +88,13 @@ export function DataTable<T extends { id: string }>({
           </div>
         );
       },
-    })),
+    })) as ColumnDef<T, unknown>[],
+    [columns, onSort, sort.sortField, sort.sortOrder],
+  );
+
+  const table = useReactTable({
+    data,
+    columns: resolvedColumns,
     getCoreRowModel: getCoreRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange,
@@ -157,10 +162,7 @@ export function DataTable<T extends { id: string }>({
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
+                <TableCell colSpan={columns.length} className="h-24 text-center">
                   暂无数据
                 </TableCell>
               </TableRow>
@@ -168,7 +170,6 @@ export function DataTable<T extends { id: string }>({
           </TableBody>
         </Table>
 
-        {/* 毛玻璃加载遮罩 */}
         {loading && <DialogLoading title="加载中..." />}
       </div>
 

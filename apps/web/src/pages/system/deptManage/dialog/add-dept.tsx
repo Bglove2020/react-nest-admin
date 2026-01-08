@@ -10,7 +10,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@ruoyi/ui";
 import { Input } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
 import * as z from "zod";
-import { deptCreateSchema } from "@ruoyi/contracts";
+import { ApiCode, type ApiResponse, deptCreateSchema } from "@ruoyi/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { TreeSelect } from "@/components/Select/tree-select";
@@ -35,13 +35,15 @@ export default function AddDeptDialog({
   activeDept?: DeptNode;
   isCreate?: boolean;
 }) {
-  const [deptTree, setDeptTree] = useState([]);
-  const [userList, setUserList] = useState([]);
+  const [deptTree, setDeptTree] = useState<DeptNode[]>([]);
+  const [userList, setUserList] = useState<Array<{ id: string; name: string }>>(
+    [],
+  );
 
   // 加载部门树数据
   useEffect(() => {
     axiosClient
-      .get("/system/dept/list")
+      .get<ApiResponse<DeptNode[]>>("/system/dept/list")
       .then((res) => {
         setDeptTree(res.data.data);
       })
@@ -51,8 +53,10 @@ export default function AddDeptDialog({
   }, []);
 
   useEffect(() => {
-    axiosClient.get("/system/user/list").then((res) => {
-      setUserList(res.data.data);
+    axiosClient.get<ApiResponse<{ list: Array<{ id: string; name: string }> }>>(
+      "/system/user/list",
+    ).then((res) => {
+      setUserList(res.data.data.list);
     });
   }, []);
 
@@ -95,11 +99,11 @@ export default function AddDeptDialog({
           leaderId: data.leaderId,
         };
       }
-      const res = await axiosClient.post(
+      const res = await axiosClient.post<ApiResponse<null>>(
         isCreate ? "/system/dept/create" : "/system/dept/update",
         accountData,
       );
-      if (res.data.code === 200) {
+      if (res.data.code === ApiCode.SUCCESS) {
         toast.success(res.data.msg);
         onOpenChange(false);
         onSuccess?.();
@@ -183,7 +187,7 @@ export default function AddDeptDialog({
                   <SingleSelect
                     className="w-full"
                     placeholder="请选择负责人"
-                    options={userList.map((user: any) => ({
+                    options={userList.map((user) => ({
                       label: user.name,
                       value: user.id,
                     }))}

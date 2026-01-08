@@ -13,7 +13,12 @@ import { RadioGroup, RadioGroupItem } from "@ruoyi/ui";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { dictDataCreateSchema, type FrontendDictData } from "@ruoyi/contracts";
+import {
+  ApiCode,
+  type ApiResponse,
+  dictDataCreateSchema,
+  type FrontendDictData,
+} from "@ruoyi/contracts";
 import { axiosClient } from "@/lib/apiClient";
 import { toast } from "sonner";
 import DialogLoading from "@/components/Dialog/loading";
@@ -61,11 +66,11 @@ export default function DictDataDialog({
       id: isCreate ? undefined : activeData?.id,
     };
     try {
-      const res = await axiosClient.post(
+      const res = await axiosClient.post<ApiResponse<null>>(
         isCreate ? "/system/dict/data/create" : "/system/dict/data/update",
         payload,
       );
-      if (res.data.code === 200) {
+      if (res.data.code === ApiCode.SUCCESS) {
         toast.success(res.data.msg);
         onOpenChange(false);
         onSuccess?.();

@@ -14,6 +14,8 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
+  ApiCode,
+  type ApiResponse,
   registerSchema,
   passwordSchema,
 } from "@ruoyi/contracts";
@@ -37,10 +39,13 @@ type RegisterForm = z.infer<typeof registerFormSchema>;
 
 async function checkUserAccount(account: string) {
   try {
-    const response = await axiosClient.get(
+    const response = await axiosClient.get<ApiResponse<{ available: boolean }>>(
       `system/user/checkUserAccount?account=${account}`,
     );
-    return response.data.data.available;
+    if (response.data.code === ApiCode.SUCCESS) {
+      return response.data.data.available;
+    }
+    return false;
   } catch (error) {
     console.error("检查账号是否存在失败:", error);
     return false;
@@ -99,19 +104,24 @@ export function RegisterForm({ ...props }: React.ComponentProps<typeof Card>) {
       const { confirmPassword, ...payload } = data;
 
       // 实际的注册 API 调用
-      const res = await axiosClient.post("/auth/register", payload);
+      const res = await axiosClient.post<ApiResponse<null>>(
+        "/auth/register",
+        payload,
+      );
       console.log(res);
-      if (res.status === 201) {
+      if (res.data.code === ApiCode.SUCCESS) {
         // 注册成功，跳转到登录页
         console.log("注册成功，开始跳转页面！");
         navigate("../login");
-        toast.success("注册成功，请登录！");
+        toast.success(res.data.msg);
       } else {
         console.error("注册失败", res);
+        toast.error(res.data.msg || "注册失败");
         // toast.error(res.data.message || '注册失败');
       }
     } catch (err: any) {
       console.error("发生异常", err);
+      toast.error(err?.response?.data?.msg || err?.message || "注册失败");
       // toast.error(err?.response?.data?.message || err.message || '网络异常,请稍后再试');
     }
   };

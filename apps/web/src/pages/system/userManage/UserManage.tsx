@@ -30,6 +30,7 @@ import { DialogMultiDeleteConfirm } from "@/components/Dialog/multi-delete-confi
 import { Switch } from "@ruoyi/ui";
 import { Permission } from "@/hooks/usePermission";
 import { useDictDataByTypeQuery, dictDataToOptions } from "@/lib/dictQueries";
+import { ApiCode, type ApiResponse } from "@ruoyi/contracts";
 
 type Filters = {
   account: string;
@@ -78,7 +79,7 @@ export default function UserManage() {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [multiDeleteDialogOpen, setMultiDeleteDialogOpen] = useState(false);
-  const [activeUser, setActiveUser] = useState<user | null>(null);
+  const [activeUser, setActiveUser] = useState<user | undefined>(undefined);
   const [userDialogOpen, setUserDialogOpen] = useState(false);
   const [isCreate, setIsCreate] = useState(true);
 
@@ -102,11 +103,9 @@ export default function UserManage() {
           sortOrder: sort.sortOrder || undefined,
         };
 
-        const res = await axiosClient.get<{
-          code: number;
-          msg: string;
-          data: { list: user[]; total: number };
-        }>("/system/user/list", {
+        const res = await axiosClient.get<
+          ApiResponse<{ list: user[]; total: number }>
+        >("/system/user/list", {
           params,
           signal: abortRef.current.signal,
         });
@@ -261,7 +260,7 @@ export default function UserManage() {
                 status: checked ? "1" : "0",
               })
               .then((res) => {
-                if (res.data.code === 200) {
+                if (res.data.code === ApiCode.SUCCESS) {
                   toast.success(res.data.msg);
                   loadUsers();
                 } else {
@@ -424,7 +423,7 @@ export default function UserManage() {
           onSuccess={() => {
             loadUsers();
             setUserDialogOpen(false);
-            setActiveUser(null);
+            setActiveUser(undefined);
           }}
           isCreate={isCreate}
           activeUser={activeUser}

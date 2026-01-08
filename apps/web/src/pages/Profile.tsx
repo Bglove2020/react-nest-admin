@@ -18,7 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@ruoyi/ui";
 import { Avatar, AvatarFallback, AvatarImage } from "@ruoyi/ui";
 import { Separator } from "@ruoyi/ui";
 import { Loader2 } from "lucide-react";
-import { emailSchema, nameSchema, sexSchema } from "@ruoyi/contracts";
+import { ApiCode, type ApiResponse, emailSchema, nameSchema, sexSchema } from "@ruoyi/contracts";
 import { useInfoQuery } from "@/lib/authQueries";
 import { axiosClient } from "@/lib/apiClient";
 import { toast } from "sonner";
@@ -92,15 +92,15 @@ export default function Profile() {
       return;
     }
     try {
-      const res = await axiosClient.post("/system/user/update", {
+      const res = await axiosClient.post<ApiResponse<null>>("/system/user/update", {
         id: user.id,
         name: values.name,
         email: values.email,
         sex: values.sex,
         avatar: values.avatar,
       });
-      if (res.data.code === 200) {
-        toast.success(res.data.msg || "Profile updated");
+      if (res.data.code === ApiCode.SUCCESS) {
+        toast.success(res.data.msg);
         await queryClient.invalidateQueries({ queryKey: ["auth", "info"] });
         reset(values);
       } else {
@@ -108,7 +108,7 @@ export default function Profile() {
       }
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message || err?.message || "Update failed",
+        err?.response?.data?.msg || err?.message || "Update failed",
       );
     }
   };

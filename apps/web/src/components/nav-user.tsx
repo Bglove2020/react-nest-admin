@@ -24,6 +24,7 @@ import {
 import { axiosClient, clearAccessToken } from "@/lib/apiClient";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { ApiCode, type ApiResponse } from "@ruoyi/contracts";
 
 export function NavUser({
   user,
@@ -99,10 +100,16 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={async () => {
-                await axiosClient.post("/auth/logout");
-                clearAccessToken();
-                toast.success("退出成功");
-                navigate("/auth/login");
+                const res = await axiosClient.post<ApiResponse<null>>(
+                  "/auth/logout",
+                );
+                if (res.data.code === ApiCode.SUCCESS) {
+                  clearAccessToken();
+                  toast.success(res.data.msg);
+                  navigate("/auth/login");
+                } else {
+                  toast.error(res.data.msg || "退出失败");
+                }
               }}
             >
               <LogOut />

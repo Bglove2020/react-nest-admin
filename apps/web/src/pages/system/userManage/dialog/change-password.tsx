@@ -11,7 +11,7 @@ import {
 import { Input } from "@ruoyi/ui";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { passwordSchema } from "@ruoyi/contracts";
+import { ApiCode, type ApiResponse, passwordSchema } from "@ruoyi/contracts";
 import { axiosClient } from "@/lib/apiClient";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -63,16 +63,19 @@ export function DialogFormChangePassword({
   const onSubmit = async (data: TChangePasswordSchema) => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 500));
-      const res = await axiosClient.post("/system/user/reset-password", {
+      const res = await axiosClient.post<ApiResponse<null>>(
+        "/system/user/reset-password",
+        {
         id: rowData.id,
         password: data.password,
-      });
-      if (res.status === 201) {
-        toast.success("密码重置成功！");
+        },
+      );
+      if (res.data.code === ApiCode.SUCCESS) {
+        toast.success(res.data.msg);
         onSuccess?.();
       } else {
         console.error("密码重置失败", res);
-        toast.error("密码重置失败，请联系管理员！");
+        toast.error(res.data.msg || "密码重置失败，请联系管理员！");
       }
     } catch (err: any) {
       console.error("发生异常", err);

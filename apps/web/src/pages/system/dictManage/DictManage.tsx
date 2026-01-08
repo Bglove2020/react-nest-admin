@@ -20,6 +20,7 @@ import { useDictDataByTypeQuery, type DictType } from "@/lib/dictQueries";
 import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import DictDialog from "./dialog/dict-dialog";
 import { useNavigate } from "react-router-dom";
+import { ApiCode, type ApiResponse } from "@ruoyi/contracts";
 
 type Filters = {
   name: string;
@@ -63,12 +64,7 @@ export default function DictManage() {
   const loadDicts = useCallback(async () => {
     const { name, type, status } = filters;
     axiosClient
-      .get<{
-        data: {
-          list: DictType[];
-          total: number;
-        };
-      }>("/system/dict/list", {
+      .get<ApiResponse<{ list: DictType[]; total: number }>>("/system/dict/list", {
         params: {
           pageNum: pagination.pageIndex,
           pageSize: pagination.pageSize,
@@ -116,7 +112,7 @@ export default function DictManage() {
         status: status ? "1" : "0",
       })
       .then((res) => {
-        if (res.data.code === 200) {
+        if (res.data.code === ApiCode.SUCCESS) {
           toast.success(res.data.msg);
           loadDicts();
         } else {

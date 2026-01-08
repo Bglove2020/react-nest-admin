@@ -1,60 +1,19 @@
-import { z } from "zod";
-
 /**
- * 统一的 API 响应 schema
- * 用于验证后端返回的响应格式
+ * 统一的 API 响应类型定义
+ * 仅保留 TypeScript 类型定义，移除不需要的 Zod Schema
  */
 
-// 成功响应代码
-export const SUCCESS_CODE = 200;
-
-// 基础 API 响应 schema
-export const apiResponseSchema = <TData extends z.ZodType>(dataSchema: TData) =>
-  z.object({
-    code: z.number(),
-    msg: z.string(),
-    data: dataSchema,
-  });
+// 响应代码
+export enum ApiCode {
+  SUCCESS = 200,
+  BAD_REQUEST = 400,
+  UNAUTHORIZED = 401,
+  NOT_FOUND = 404,
+  BIZ_ERROR = 10000, // 通用业务错误
+}
 
 /**
- * 列表响应 schema
- * 用于返回数据列表的接口
- */
-export const listResponseSchema = <TData extends z.ZodType>(dataSchema: TData) =>
-  z.object({
-    code: z.number(),
-    msg: z.string(),
-    data: z.array(dataSchema),
-  });
-
-/**
- * ���页响应 schema
- * 用于返回分页数据的接口
- */
-export const paginatedResponseSchema = <TData extends z.ZodType>(
-  dataSchema: TData
-) =>
-  z.object({
-    code: z.number(),
-    msg: z.string(),
-    data: z.object({
-      list: z.array(dataSchema),
-      total: z.number(),
-    }),
-  });
-
-/**
- * 无数据响应 schema
- * 用于不需要返回数据的操作（如删除、更新等）
- */
-export const noDataResponseSchema = z.object({
-  code: z.number(),
-  msg: z.string(),
-  data: z.null().or(z.undefined()),
-});
-
-/**
- * 创建成功响应的类型推断工具
+ * 基础 API 响应类型
  */
 export type ApiResponse<T> = {
   code: number;
@@ -62,17 +21,9 @@ export type ApiResponse<T> = {
   data: T;
 };
 
-export type ListResponse<T> = {
-  code: number;
-  msg: string;
-  data: T[];
+type PaginationData<T> = {
+  list: T[];
+  total: number;
 };
 
-export type PaginatedResponse<T> = {
-  code: number;
-  msg: string;
-  data: {
-    list: T[];
-    total: number;
-  };
-};
+export type PaginatedResponse<T> = ApiResponse<PaginationData<T>>;

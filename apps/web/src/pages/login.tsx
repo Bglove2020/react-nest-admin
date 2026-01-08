@@ -13,7 +13,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { loginSchema, type LoginPayload } from "@ruoyi/contracts";
+import { ApiCode, type ApiResponse, loginSchema, type LoginPayload } from "@ruoyi/contracts";
 import { useQueryClient } from "@tanstack/react-query";
 
 // 使用 contracts 中的 loginSchema
@@ -39,12 +39,15 @@ export function LoginForm() {
 
   const onSubmit = async (data: LoginSchemaType) => {
     try {
-      const res = await axiosClient.post("/auth/login", {
-        account: data.account,
-        password: data.password,
-      });
+      const res = await axiosClient.post<ApiResponse<{ accessToken: string }>>(
+        "/auth/login",
+        {
+          account: data.account,
+          password: data.password,
+        },
+      );
       // console.log(res)
-      if (res.status === 201) {
+      if (res.data.code === ApiCode.SUCCESS) {
         // Access Token 存入内存，Refresh Token 由服务端以 HttpOnly Cookie 设置
         const token = res.data.data.accessToken;
         // console.log('token',token)
@@ -57,15 +60,17 @@ export function LoginForm() {
           queryClient.invalidateQueries({ queryKey: ["auth", "routers"] }),
           queryClient.invalidateQueries({ queryKey: ["auth", "sideBar"] }),
         ]);
-        toast.success("登录成功！");
+        toast.success(res.data.msg);
         navigate("/");
+      } else {
+        toast.error(res.data.msg || "登录失败");
       }
       // else {
       //   setError(res.data.message || '登录失败') // 显示后端返回的错误信息
       // }
     } catch (err: any) {
       toast.error(
-        err?.response?.data?.message || err.message || "网络异常，请稍后再试",
+        err?.response?.data?.msg || err.message || "网络异常，请稍后再试",
       ); // 捕获并显示错误
     }
   };

@@ -19,6 +19,7 @@ import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import { Switch } from "@ruoyi/ui";
 import AddRoleDialog from "./dialog/add-role";
 import { useDictDataByTypeQuery } from "@/lib/dictQueries";
+import { ApiCode, type ApiResponse } from "@ruoyi/contracts";
 
 type Filters = {
   name: string;
@@ -62,7 +63,7 @@ export default function RoleManage() {
   // 控制操作列弹窗（可编程开关）
   const [addRoleDialogOpen, setAddRoleDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [activeRole, setActiveRole] = useState<role | null>(null);
+  const [activeRole, setActiveRole] = useState<role | undefined>(undefined);
   const [isCreate, setIsCreate] = useState(false);
 
   const loadRoles = useCallback(async () => {
@@ -77,11 +78,9 @@ export default function RoleManage() {
         sortOrder: sort.sortOrder || undefined,
       };
 
-      const res = await axiosClient.get<{
-        code: number;
-        msg: string;
-        data: { list: role[]; total: number };
-      }>("/system/role/list", { params });
+      const res = await axiosClient.get<
+        ApiResponse<{ list: role[]; total: number }>
+      >("/system/role/list", { params });
 
       setData(res.data.data.list);
       setTotal(res.data.data.total);
@@ -185,7 +184,7 @@ export default function RoleManage() {
                 status: checked ? "1" : "0",
               })
               .then((res) => {
-                if (res.data.code === 200) {
+                if (res.data.code === ApiCode.SUCCESS) {
                   toast.success(res.data.msg);
                   loadRoles();
                 } else {

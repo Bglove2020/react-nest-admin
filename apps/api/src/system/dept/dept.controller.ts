@@ -1,8 +1,9 @@
 import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
+import { ApiCode, type ApiResponse } from '@ruoyi/contracts';
+import type { FrontendDept } from '@ruoyi/contracts';
 import { DeptService } from './dept.service';
 import { CreateDeptDto } from './dto/create-dept.dto';
 import { UpdateDeptDto } from './dto/update-dept.dto';
-import type { FrontendDept } from '@ruoyi/contracts';
 import { RequirePerms } from '@/auth/decorators/perms.decorator';
 
 @Controller('system/dept')
@@ -11,10 +12,10 @@ export class DeptController {
 
   @RequirePerms('system:dept:add')
   @Post('create')
-  async create(@Body() createDeptDto: CreateDeptDto) {
+  async create(@Body() createDeptDto: CreateDeptDto): Promise<ApiResponse<null>> {
     await this.deptService.create(createDeptDto);
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg: '创建成功',
       data: null,
     };
@@ -22,22 +23,21 @@ export class DeptController {
 
   @RequirePerms('system:dept:list')
   @Get('list')
-  async list() {
+  async list(): Promise<ApiResponse<FrontendDept[]>> {
     const result = await this.deptService.list();
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg: '查询成功',
       data: result,
-      logdata: { count: result.length },
     };
   }
 
   @RequirePerms('system:dept:update')
   @Post('update')
-  async update(@Body() updateDeptDto: UpdateDeptDto) {
+  async update(@Body() updateDeptDto: UpdateDeptDto): Promise<ApiResponse<null>> {
     await this.deptService.update(updateDeptDto);
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg: '更新成功',
       data: null,
     };
@@ -45,7 +45,7 @@ export class DeptController {
 
   @RequirePerms('system:dept:delete')
   @Delete('delete')
-  async delete(@Query('id') id: string) {
+  async delete(@Query('id') id: string): Promise<ApiResponse<null>> {
     const { childCount, userCount } = await this.deptService.delete(id);
     const hasChild = childCount > 0;
     const hasUser = userCount > 0;
@@ -58,7 +58,7 @@ export class DeptController {
       msg = `删除成功，包含${userCount}个用户`;
     }
     return {
-      code: 200,
+      code: ApiCode.SUCCESS,
       msg,
       data: null,
     };

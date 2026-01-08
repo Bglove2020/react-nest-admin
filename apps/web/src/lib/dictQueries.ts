@@ -1,19 +1,24 @@
 import { useQuery, type UseQueryResult } from "@tanstack/react-query";
 import { axiosClient } from "./apiClient";
 import type {
+  ApiResponse,
   FrontendDictData as DictData,
   FrontendDictType as DictType,
 } from "@ruoyi/contracts";
+import { ApiCode } from "@ruoyi/contracts";
 
 export type { DictData, DictType };
 
 // 通过字典类型直接获取字典数据（不需要 id）
 async function fetchDictDataByType(dictType: string): Promise<DictData[]> {
-  const res = await axiosClient.get<{
-    data: { list: DictData[]; total: number };
-  }>("/system/dict/data/list", {
+  const res = await axiosClient.get<
+    ApiResponse<{ list: DictData[]; total: number }>
+  >("/system/dict/data/list", {
     params: { type: dictType },
   });
+  if (res.data.code !== ApiCode.SUCCESS) {
+    throw new Error(res.data.msg);
+  }
   return res.data.data.list;
 }
 

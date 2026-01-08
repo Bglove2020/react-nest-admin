@@ -14,6 +14,8 @@ import { useCallback, useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
+  ApiCode,
+  type ApiResponse,
   userCreateSchema,
   userUpdateSchema,
   passwordSchema,
@@ -39,14 +41,18 @@ import { Field, FieldGroup, FieldLabel, FieldError } from "@ruoyi/ui";
 import { useForm, Controller } from "react-hook-form";
 import { HoverCardFormItem } from "@ruoyi/ui";
 import { TreeSelect } from "@/components/Select/tree-select";
+import type { DeptNode } from "@/types/tree";
 
 // 后端账号可用性校验（约定返回 { available: boolean }）
 async function checkUserAccount(account: string) {
   try {
-    const response = await axiosClient.get(
+    const response = await axiosClient.get<ApiResponse<{ available: boolean }>>(
       `system/user/checkUserAccount?account=${account}`,
     );
-    return response.data.data.available;
+    if (response.data.code === ApiCode.SUCCESS) {
+      return response.data.data.available;
+    }
+    return false;
   } catch (error) {
     console.error("检查账号是否存在失败:", error);
     return false;
@@ -97,6 +103,15 @@ const CreateUserSchema = userCreateFormSchema.refine(
 const UpdateUserSchema = userUpdateSchema;
 type TCreateUserSchema = z.infer<typeof CreateUserSchema>;
 type TUpdateUserSchema = z.infer<typeof UpdateUserSchema>;
+type CreateUserPayload = Omit<TCreateUserSchema, "confirmPassword">;
+type UserDialogData = {
+  id: string;
+  name: string;
+  sex: "0" | "1" | "2";
+  status: "0" | "1";
+  deptId?: string;
+  roleIds?: string[];
+};
 
 export function UserDialog({
   open,
@@ -108,11 +123,13 @@ export function UserDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  activeUser?: any;
+  activeUser?: UserDialogData;
   isCreate?: boolean;
 }) {
-  const [deptTree, setDeptTree] = useState([]);
-  const [roleList, setRoleList] = useState([]);
+  const [deptTree, setDeptTree] = useState<DeptNode[]>([]);
+  const [roleList, setRoleList] = useState<Array<{ label: string; value: string }>>(
+    [],
+  );
 
   const defaultValues = isCreate
     ? {
@@ -127,7 +144,7 @@ export function UserDialog({
         roleIds: [] as string[],
       }
     : {
-        id: activeUser.id,
+        id: activeUser?.id ?? "",
         name: activeUser?.name || "",
         sex: (activeUser?.sex || "1") as "0" | "1" | "2",
         status: (activeUser?.status || "1") as "0" | "1",
@@ -147,9 +164,13 @@ export function UserDialog({
   });
 
   useEffect(() => {
-    axiosClient.get("/system/role/list").then((res) => {
+    axiosClient
+      .get<ApiResponse<{ list: Array<{ id: string; name: string }> }>>(
+        "/system/role/list",
+      )
+      .then((res) => {
       setRoleList(
-        res.data.data.list.map((role: any) => ({
+        res.data.data.list.map((role) => ({
           label: role.name,
           value: role.id,
         })),
@@ -158,7 +179,7 @@ export function UserDialog({
   }, []);
 
   const loadDeptTree = useCallback(() => {
-    axiosClient.get("/system/dept/list").then((res) => {
+    axiosClient.get<ApiResponse<DeptNode[]>>("/system/dept/list").then((res) => {
       setDeptTree(res.data.data);
     });
   }, []);
@@ -175,17 +196,17 @@ export function UserDialog({
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       // 如果是创建用户，移除 confirmPassword 字段
-      let submitData: any = data;
+      let submitData: TUpdateUserSchema | CreateUserPayload = data;
       if (isCreate && "confirmPassword" in data) {
-        const { confirmPassword, ...payload } = data as any;
+        const { confirmPassword, ...payload } = data as TCreateUserSchema;
         submitData = payload;
       }
 
-      const res = await axiosClient.post(
+      const res = await axiosClient.post<ApiResponse<null>>(
         isCreate ? "/system/user/create" : "/system/user/update",
         submitData,
       );
-      if (res.data.code === 200) {
+      if (res.data.code === ApiCode.SUCCESS) {
         toast.success(res.data.msg);
         onSuccess?.();
       } else {

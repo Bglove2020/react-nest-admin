@@ -29,7 +29,8 @@ import {
 import CatalogSubForm from "../subForm/Catalog";
 import MenuSubForm from "../subForm/Menu";
 import ButtonSubForm from "../subForm/Button";
-import type { FrontendMenu } from "@ruoyi/contracts";
+import { ApiCode, type ApiResponse, type FrontendMenu } from "@ruoyi/contracts";
+import type { MenuNode } from "@/types/tree";
 
 export default function FormDialog({
   open,
@@ -44,14 +45,27 @@ export default function FormDialog({
   activeData?: FrontendMenu;
   isCreate?: boolean;
 }) {
-  const [menuTree, setMenuTree] = useState([]);
+  const [menuTree, setMenuTree] = useState<MenuNode[]>([]);
+
+  const toMenuNode = (menu: FrontendMenu): MenuNode => ({
+    id: menu.id,
+    name: menu.name,
+    sortOrder: menu.sortOrder,
+    path: menu.path ?? undefined,
+    perms: menu.perms ?? undefined,
+    isFrame: menu.isFrame as MenuNode["isFrame"],
+    menuType: menu.menuType as MenuNode["menuType"],
+    visible: menu.visible as MenuNode["visible"],
+    status: menu.status as MenuNode["status"],
+    children: menu.children?.map(toMenuNode) ?? [],
+  });
 
   // 加载菜单树数据
   useEffect(() => {
     if (open) {
       axiosClient
-        .get("/system/menu/list")
-        .then((res) => setMenuTree(res.data.data));
+        .get<ApiResponse<FrontendMenu[]>>("/system/menu/list")
+        .then((res) => setMenuTree(res.data.data.map(toMenuNode)));
     }
   }, [open]);
 
@@ -88,8 +102,8 @@ export default function FormDialog({
       const url = isCreate ? "/system/menu/create" : "/system/menu/update";
       const payload = isCreate ? data : { ...data, id: activeData?.id };
 
-      const res = await axiosClient.post(url, payload);
-      if (res.data.code === 200) {
+      const res = await axiosClient.post<ApiResponse<null>>(url, payload);
+      if (res.data.code === ApiCode.SUCCESS) {
         toast.success(res.data.msg);
         onOpenChange(false);
         onSuccess?.();

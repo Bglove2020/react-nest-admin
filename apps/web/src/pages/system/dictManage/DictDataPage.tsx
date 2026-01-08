@@ -20,6 +20,7 @@ import { type DictData, useDictDataByTypeQuery } from "@/lib/dictQueries";
 import DictDataDialog from "./dialog/dict-data-dialog";
 import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import { SingleSelect } from "@/components/Select/single-select";
+import { ApiCode, type ApiResponse } from "@ruoyi/contracts";
 
 type DataFilters = {
   label: string;
@@ -61,12 +62,9 @@ export default function DictDataPage() {
   const loadDictData = useCallback(async () => {
     const { label, status } = dataFilters;
     axiosClient
-      .get<{
-        data: {
-          list: DictData[];
-          total: number;
-        };
-      }>("/system/dict/data/list", {
+      .get<ApiResponse<{ list: DictData[]; total: number }>>(
+        "/system/dict/data/list",
+        {
         params: {
           pageNum: pagination.pageIndex,
           pageSize: pagination.pageSize,
@@ -76,7 +74,8 @@ export default function DictDataPage() {
           sortField: sort.sortField || undefined,
           sortOrder: sort.sortOrder || undefined,
         },
-      })
+        },
+      )
       .then((res) => {
         setDictDataList(res.data.data.list);
         setTotal(res.data.data.total);
@@ -114,7 +113,7 @@ export default function DictDataPage() {
         status: status ? "1" : "0",
       })
       .then((res) => {
-        if (res.data.code === 200) {
+        if (res.data.code === ApiCode.SUCCESS) {
           toast.success(res.data.msg);
           loadDictData();
         } else {

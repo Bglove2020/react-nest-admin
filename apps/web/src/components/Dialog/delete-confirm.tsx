@@ -11,6 +11,7 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import { ApiCode, type ApiResponse } from "@ruoyi/contracts";
 
 export function DialogDeleteConfirm({
   open,
@@ -24,7 +25,7 @@ export function DialogDeleteConfirm({
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
   title?: string;
-  deleteApi: () => Promise<{ data: { code: number; msg: string } }>;
+  deleteApi: () => Promise<{ data: ApiResponse<unknown> }>;
   children?: React.ReactNode;
 }) {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -34,7 +35,7 @@ export function DialogDeleteConfirm({
       setIsSubmitting(true);
       await new Promise((resolve) => setTimeout(resolve, 500));
       const res = await deleteApi();
-      if (res.data.code === 200) {
+      if (res.data.code === ApiCode.SUCCESS) {
         toast.success(res.data.msg);
         onSuccess?.();
         onOpenChange(false);
@@ -42,7 +43,7 @@ export function DialogDeleteConfirm({
         toast.error(res.data.msg);
       }
     } catch (err: any) {
-      toast.error(err.response.data.msg);
+      toast.error(err?.response?.data?.msg || err?.message || "操作失败");
     } finally {
       setIsSubmitting(false);
     }

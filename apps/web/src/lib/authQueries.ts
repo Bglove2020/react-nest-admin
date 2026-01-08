@@ -1,21 +1,36 @@
 import { useQuery } from "@tanstack/react-query";
 import { axiosClient } from "./apiClient";
-import type { UserRouterItem, SideBarItem, UserInfo } from "@ruoyi/contracts";
+import {
+  ApiCode,
+  type ApiResponse,
+  type UserRouterItem,
+  type SideBarItem,
+  type UserInfo,
+} from "@ruoyi/contracts";
 
 async function fetchInfo() {
-  const res = await axiosClient.get<{ data: UserInfo }>("/getInfo");
+  const res = await axiosClient.get<ApiResponse<UserInfo>>("/getInfo");
+  if (res.data.code !== ApiCode.SUCCESS) {
+    throw new Error(res.data.msg);
+  }
   return res.data.data;
 }
 
 async function fetchRouters() {
-  const res = await axiosClient.get<{ data: UserRouterItem[] }>("/getRouters");
+  const res = await axiosClient.get<ApiResponse<UserRouterItem[]>>("/getRouters");
+  if (res.data.code !== ApiCode.SUCCESS) {
+    throw new Error(res.data.msg);
+  }
   return res.data.data;
 }
 
 async function fetchSideBar() {
-  const res = await axiosClient.get<{ data: SideBarItem[] }>(
+  const res = await axiosClient.get<ApiResponse<SideBarItem[]>>(
     "/getSideBarMenus",
   );
+  if (res.data.code !== ApiCode.SUCCESS) {
+    throw new Error(res.data.msg);
+  }
   return res.data.data;
 }
 

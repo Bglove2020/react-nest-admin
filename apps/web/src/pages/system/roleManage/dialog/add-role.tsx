@@ -15,7 +15,12 @@ import {
 import { Input } from "@ruoyi/ui";
 import { Button } from "@ruoyi/ui";
 import * as z from "zod";
-import { roleCreateSchema } from "@ruoyi/contracts";
+import {
+  ApiCode,
+  type ApiResponse,
+  roleCreateSchema,
+  type FrontendMenu,
+} from "@ruoyi/contracts";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { axiosClient } from "@/lib/apiClient";
@@ -35,15 +40,22 @@ export default function AddRoleDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
-  activeRole?: any;
+  activeRole?: {
+    id: string;
+    name: string;
+    roleKey: string;
+    sortOrder: number;
+    status: "0" | "1";
+    menuIds?: string[];
+  };
   isCreate?: boolean;
 }) {
-  const [menuTree, setMenuTree] = useState([]);
+  const [menuTree, setMenuTree] = useState<FrontendMenu[]>([]);
 
   // 加载部门树数据
   useEffect(() => {
     axiosClient
-      .get("/system/menu/list")
+      .get<ApiResponse<FrontendMenu[]>>("/system/menu/list")
       .then((res) => {
         setMenuTree(res.data.data);
       })
@@ -85,12 +97,12 @@ export default function AddRoleDialog({
         menuIds: data.menuIds,
         id: isCreate ? undefined : activeRole?.id,
       };
-      const res = await axiosClient.post(
+      const res = await axiosClient.post<ApiResponse<null>>(
         isCreate ? "/system/role/create" : "/system/role/update",
         roleData,
       );
       // console.log('res',res);
-      if (res.data.code === 200) {
+      if (res.data.code === ApiCode.SUCCESS) {
         toast.success(res.data.msg);
         onOpenChange(false);
         onSuccess?.();

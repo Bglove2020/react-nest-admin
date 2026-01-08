@@ -25,6 +25,7 @@ import AddDeptDialog from "@/pages/system/deptManage/dialog/add-dept";
 import type { DeptNode } from "@/types/tree";
 import { DialogDeleteConfirm } from "@/components/Dialog/delete-confirm";
 import { useDictDataByTypeQuery } from "@/lib/dictQueries";
+import { ApiCode, type ApiResponse } from "@ruoyi/contracts";
 
 // 筛选条件
 type Filters = {
@@ -54,7 +55,7 @@ export default function DeptManage() {
   });
 
   const loadDepts = useCallback(() => {
-    axiosClient.get<{ data: DeptNode[] }>("/system/dept/list").then((res) => {
+    axiosClient.get<ApiResponse<DeptNode[]>>("/system/dept/list").then((res) => {
       setData(res.data.data);
     });
   }, []);
@@ -96,7 +97,7 @@ export default function DeptManage() {
                 status: checked ? "1" : "0",
               })
               .then((res) => {
-                if (res.data.code === 200) {
+                if (res.data.code === ApiCode.SUCCESS) {
                   toast.success(res.data.msg);
                   loadDepts();
                 } else {
@@ -104,7 +105,7 @@ export default function DeptManage() {
                 }
               })
               .catch((err) => {
-                toast.error(err.response.data.msg);
+                toast.error(err?.response?.data?.msg || err?.message || "更新失败");
               });
           }}
         />
