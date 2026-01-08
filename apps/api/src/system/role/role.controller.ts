@@ -1,4 +1,12 @@
-import { Body, Controller, Delete, Get, Param, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -19,7 +27,7 @@ export class RoleController {
       code: 200,
       msg: '角色创建成功',
       data: null,
-      logdata: { roleName: createRoleDto.roleName },
+      logdata: { roleName: createRoleDto.name },
     };
   }
 
@@ -47,7 +55,7 @@ export class RoleController {
       code: 200,
       msg: '角色更新成功',
       data: null,
-      logdata: { roleId: updateRoleDto.roleId },
+      logdata: { roleId: updateRoleDto.id },
     };
   }
 

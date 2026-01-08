@@ -1,26 +1,26 @@
-﻿import * as React from "react"
-import { Check, ChevronDown, X } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@ruoyi/ui"
-import { Input } from "@ruoyi/ui"
-import { Popover, PopoverContent, PopoverTrigger } from "@ruoyi/ui"
-import { Checkbox } from "@ruoyi/ui"
-import { Badge } from "@ruoyi/ui"
+﻿import * as React from "react";
+import { Check, ChevronDown, X } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@ruoyi/ui";
+import { Input } from "@ruoyi/ui";
+import { Popover, PopoverContent, PopoverTrigger } from "@ruoyi/ui";
+import { Checkbox } from "@ruoyi/ui";
+import { Badge } from "@ruoyi/ui";
 
 export type Option = {
-  label: string
-  value: string
-}
+  label: string;
+  value: string;
+};
 
 export interface MultiSelectDropdownProps {
-  options: Option[]
-  value?: string[]
-  onChange?: (value: string[]) => void
-  placeholder?: string
-  searchPlaceholder?: string
-  className?: string
-  disabled?: boolean
-  maxDisplay?: number
+  options: Option[];
+  value?: string[];
+  onChange?: (value: string[]) => void;
+  placeholder?: string;
+  searchPlaceholder?: string;
+  className?: string;
+  disabled?: boolean;
+  maxDisplay?: number;
 }
 
 export function MultiSelectDropdown({
@@ -33,65 +33,65 @@ export function MultiSelectDropdown({
   disabled = false,
   maxDisplay = 3,
 }: MultiSelectDropdownProps) {
-  const [open, setOpen] = React.useState(false)
-  const [searchQuery, setSearchQuery] = React.useState("")
+  const [open, setOpen] = React.useState(false);
+  const [searchQuery, setSearchQuery] = React.useState("");
 
   // 根据 value 数组获取选中的选项
   const selectedOptions = React.useMemo(() => {
-    return options.filter((option) => value.includes(option.value))
-  }, [options, value])
+    return options.filter((option) => value.includes(option.value));
+  }, [options, value]);
 
   // 过滤选项
   const filteredOptions = React.useMemo(() => {
     if (!searchQuery.trim()) {
-      return options
+      return options;
     }
-    const query = searchQuery.toLowerCase()
+    const query = searchQuery.toLowerCase();
     return options.filter((option) =>
-      option.label.toLowerCase().includes(query)
-    )
-  }, [options, searchQuery])
+      option.label.toLowerCase().includes(query),
+    );
+  }, [options, searchQuery]);
 
   // 切换选项选中状态
   const toggleOption = (optionValue: string) => {
-    if (disabled) return
-    
+    if (disabled) return;
+
     const newValue = value.includes(optionValue)
       ? value.filter((v) => v !== optionValue)
-      : [...value, optionValue]
-    
-    onChange?.(newValue)
-  }
+      : [...value, optionValue];
+
+    onChange?.(newValue);
+  };
 
   // 移除单个选项
   const removeOption = (optionValue: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (disabled) return
-    
-    const newValue = value.filter((v) => v !== optionValue)
-    onChange?.(newValue)
-  }
+    e.stopPropagation();
+    if (disabled) return;
+
+    const newValue = value.filter((v) => v !== optionValue);
+    onChange?.(newValue);
+  };
 
   // 清空所有选项
   const clearAll = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (disabled) return
-    onChange?.([])
-  }
+    e.stopPropagation();
+    if (disabled) return;
+    onChange?.([]);
+  };
 
   // 全选当前过滤结果
   const selectAll = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    if (disabled) return
-    
-    const filteredValues = filteredOptions.map((opt) => opt.value)
-    const newValue = Array.from(new Set([...value, ...filteredValues]))
-    onChange?.(newValue)
-  }
+    e.stopPropagation();
+    if (disabled) return;
+
+    const filteredValues = filteredOptions.map((opt) => opt.value);
+    const newValue = Array.from(new Set([...value, ...filteredValues]));
+    onChange?.(newValue);
+  };
 
   // 计算显示的标签数量
-  const displayCount = Math.min(selectedOptions.length, maxDisplay)
-  const remainingCount = selectedOptions.length - displayCount
+  const displayCount = Math.min(selectedOptions.length, maxDisplay);
+  const remainingCount = selectedOptions.length - displayCount;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -101,9 +101,9 @@ export function MultiSelectDropdown({
           role="combobox"
           aria-expanded={open}
           className={cn(
-            "w-full justify-between min-h-9 h-auto px-3 py-1",
+            "h-auto min-h-9 w-full justify-between px-3 py-1",
             !value.length && "text-muted-foreground",
-            className
+            className,
           )}
           disabled={disabled}
         >
@@ -122,15 +122,15 @@ export function MultiSelectDropdown({
                     {!disabled && (
                       <button
                         type="button"
-                        className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                        className="ml-1 rounded-full ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
-                            removeOption(option.value, e as any)
+                            removeOption(option.value, e as any);
                           }
                         }}
                         onMouseDown={(e) => {
-                          e.preventDefault()
-                          e.stopPropagation()
+                          e.preventDefault();
+                          e.stopPropagation();
                         }}
                         onClick={(e) => removeOption(option.value, e)}
                       >
@@ -140,26 +140,29 @@ export function MultiSelectDropdown({
                   </Badge>
                 ))}
                 {remainingCount > 0 && (
-                  <Badge variant="secondary" className="mr-0 px-2 py-0.5 text-xs">
+                  <Badge
+                    variant="secondary"
+                    className="mr-0 px-2 py-0.5 text-xs"
+                  >
                     +{remainingCount}
                   </Badge>
                 )}
               </>
             )}
           </div>
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex shrink-0 items-center gap-1.5">
             {selectedOptions.length > 0 && !disabled && (
               <button
                 type="button"
-                className="rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                className="rounded-full ring-offset-background outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
-                    clearAll(e as any)
+                    clearAll(e as any);
                   }
                 }}
                 onMouseDown={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
+                  e.preventDefault();
+                  e.stopPropagation();
                 }}
                 onClick={(e) => clearAll(e)}
               >
@@ -170,10 +173,13 @@ export function MultiSelectDropdown({
           </div>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0" align="start">
+      <PopoverContent
+        className="w-[var(--radix-popover-trigger-width)] p-0"
+        align="start"
+      >
         <div className="flex flex-col">
           {/* 搜索框 */}
-          <div className="p-2 border-b">
+          <div className="border-b p-2">
             <Input
               placeholder={searchPlaceholder}
               value={searchQuery}
@@ -184,7 +190,7 @@ export function MultiSelectDropdown({
 
           {/* 操作按钮 */}
           {filteredOptions.length > 0 && (
-            <div className="flex items-center justify-between p-2 border-b">
+            <div className="flex items-center justify-between border-b p-2">
               <span className="text-xs text-muted-foreground">
                 已选择 {selectedOptions.length} / {options.length}
               </span>
@@ -194,7 +200,9 @@ export function MultiSelectDropdown({
                   size="sm"
                   className="h-7 text-xs"
                   onClick={selectAll}
-                  disabled={filteredOptions.every((opt) => value.includes(opt.value))}
+                  disabled={filteredOptions.every((opt) =>
+                    value.includes(opt.value),
+                  )}
                 >
                   全选
                 </Button>
@@ -221,13 +229,13 @@ export function MultiSelectDropdown({
             ) : (
               <div className="space-y-1">
                 {filteredOptions.map((option) => {
-                  const isSelected = value.includes(option.value)
+                  const isSelected = value.includes(option.value);
                   return (
                     <div
                       key={option.value}
                       className={cn(
-                        "flex items-center gap-2 rounded-md px-2 py-1.5 cursor-pointer hover:bg-accent",
-                        isSelected && "bg-accent"
+                        "flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 hover:bg-accent",
+                        isSelected && "bg-accent",
                       )}
                       onClick={() => toggleOption(option.value)}
                     >
@@ -238,10 +246,10 @@ export function MultiSelectDropdown({
                       />
                       <span className="flex-1 text-sm">{option.label}</span>
                       {isSelected && (
-                        <Check className="h-4 w-4 text-primary shrink-0" />
+                        <Check className="h-4 w-4 shrink-0 text-primary" />
                       )}
                     </div>
-                  )
+                  );
                 })}
               </div>
             )}
@@ -249,5 +257,5 @@ export function MultiSelectDropdown({
         </div>
       </PopoverContent>
     </Popover>
-  )
+  );
 }

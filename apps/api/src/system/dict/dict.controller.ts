@@ -64,7 +64,7 @@ export class DictController {
       code: 200,
       msg: '字典获取成功',
       data: frontendDict,
-      logdata: { dictId: id, dictType: frontendDict.dictType },
+      logdata: { dictId: id, dictType: frontendDict.type },
     };
   }
 
@@ -76,7 +76,7 @@ export class DictController {
       code: 200,
       msg: '字典创建成功',
       data: null,
-      logdata: { dictType: dto.dictType, dictName: dto.dictName },
+      logdata: { dictType: dto.type, dictName: dto.name },
     };
   }
 
@@ -88,7 +88,7 @@ export class DictController {
       code: 200,
       msg: '字典更新成功',
       data: null,
-      logdata: { dictId: dto.dictId },
+      logdata: { dictId: dto.id },
     };
   }
 
@@ -109,14 +109,7 @@ export class DictController {
   async listData(
     @Query() query: DictDataListDto,
     @Query('type') type?: string,
-  ): Promise<{
-    code: number;
-    msg: string;
-    data: {
-      list: FrontendDictData[];
-      total: number;
-    };
-  }> {
+  ) {
     if (!type) {
       throw new BadRequestException({ msg: 'type 参数是必需的', code: 400 });
     }
@@ -128,7 +121,7 @@ export class DictController {
         list: toFrontendDictDataDtos(list),
         total,
       },
-      logdata: { dictType: type, count: list.length, total },
+      logdata: { count: list.length, total },
     };
   }
 
@@ -140,7 +133,7 @@ export class DictController {
       code: 200,
       msg: '字典数据创建成功',
       data: null,
-      logdata: { dictCode: dto.dictCode, dictLabel: dto.dictLabel },
+      logdata: { dictCode: dto.value, dictLabel: dto.label },
     };
   }
 
@@ -152,7 +145,7 @@ export class DictController {
       code: 200,
       msg: '字典数据更新成功',
       data: null,
-      logdata: { dictDataId: dto.dictDataId },
+      logdata: { dictDataId: dto.id },
     };
   }
 
